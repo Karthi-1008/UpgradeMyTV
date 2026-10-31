@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary build directories & artifacts
+tvpowernew_src/bin/
+tvpowernew_src/dex/
+compiled_res.zip
+unaligned.apk
+unaligned_with_dex.apk
+TVPowerNew_aligned.apk
+*.idsig
+
+# Early prototyping & scratch files
+*.py
+*.sh
+*.bat
+*.vbs
+/web/
+*.jar
+*.dex
+KeyHelp.apk
+rcu.apk
+backup/
+test_java_adb/
+downloads/
+tvpowerhub_strings.txt
+power.txt
+
+# Root temporary screenshots (Canonical documentation screenshots are in docs/screenshots/)
+/*.png
+!docs/screenshots/*.png
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

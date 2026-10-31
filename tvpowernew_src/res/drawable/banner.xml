@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Background -->
+    <path
+        android:fillColor="#ff101113"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- Subtle bottom border accent -->
+    <path
+        android:fillColor="#ffff6b3d"
+        android:pathData="M0,176h320v4h-320z" />
+    <!-- Modern TV Remote Emblem -->
+    <path
+        android:fillColor="#ff1e2024"
+        android:pathData="M130,35 h60 a12,12 0 0 1 12,12 v86 a12,12 0 0 1 -12,12 h-60 a12,12 0 0 1 -12,-12 v-86 a12,12 0 0 1 12,-12 z" />
+    <!-- OK Button Accent -->
+    <path
+        android:fillColor="#ffff6b3d"
+        android:pathData="M160,78 m-16,0 a16,16 0 1,0 32,0 a16,16 0 1,0 -32,0" />
+    <!-- Power dot -->
+    <path
+        android:fillColor="#ff4cd39a"
+        android:pathData="M178,50 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <!-- Pill button representations -->
+    <path
+        android:fillColor="#ff272a30"
+        android:pathData="M134,106h14v5h-14z M153,106h14v5h-14z M172,106h14v5h-14z" />
+    <path
+        android:fillColor="#ff272a30"
+        android:pathData="M136,120h48v6h-48z" />
+</vector>

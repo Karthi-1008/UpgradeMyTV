@@ -1,0 +1,20 @@
+{
+  "name": "TV Remote",
+  "short_name": "TV Remote",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101113",
+  "theme_color": "#101113",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='44' fill='%2317181B'/><circle cx='96' cy='96' r='48' fill='%23FF6B3D'/><polygon points='86,76 116,96 86,116' fill='%231A0B05'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2317181B'/><circle cx='256' cy='256' r='130' fill='%23FF6B3D'/><polygon points='230,200 310,256 230,312' fill='%231A0B05'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101113">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TV Remote">
+  <title>TCL TV Remote</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <!-- Inline SVG Symbols Sprite (100% self-contained offline) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+      <line x1="12" y1="2" x2="12" y2="12"/>
+    </symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 14 4 9 9 4"/>
+      <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+    </symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </symbol>
+    <symbol id="i-more-dots" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+      <circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+      <circle cx="5" cy="12" r="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </symbol>
+    <symbol id="i-volume-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+    </symbol>
+    <symbol id="i-volume-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </symbol>
+    <symbol id="i-volume-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <line x1="22" y1="9" x2="16" y2="15"/>
+      <line x1="16" y1="9" x2="22" y2="15"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <polygon points="6 4 20 12 6 20 6 4"/>
+    </symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <rect x="6" y="4" width="4" height="16" rx="1"/>
+      <rect x="14" y="4" width="4" height="16" rx="1"/>
+    </symbol>
+    <symbol id="i-skip-back-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 6 7 2 3 6"/>
+      <path d="M7 2v8a6 6 0 0 0 10.24 4.24"/>
+      <text x="14" y="15" font-size="8" font-family="'JetBrains Mono', monospace" font-weight="700" fill="currentColor" stroke="none" text-anchor="middle">10</text>
+    </symbol>
+    <symbol id="i-skip-forward-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m13 6 4-4 4 4"/>
+      <path d="M17 2v8a6 6 0 0 1-10.24 4.24"/>
+      <text x="10" y="15" font-size="8" font-family="'JetBrains Mono', monospace" font-weight="700" fill="currentColor" stroke="none" text-anchor="middle">10</text>
+    </symbol>
+    <symbol id="i-input" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="7" width="18" height="10" rx="2"/>
+      <line x1="7" y1="12" x2="11" y2="12"/>
+      <polyline points="9 10 11 12 9 14"/>
+      <line x1="14" y1="12" x2="17" y2="12"/>
+    </symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </symbol>
+    <symbol id="i-screen-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="20" height="14" x="2" y="3" rx="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+      <path d="M12 7a3 3 0 1 0 3 3 2.8 2.8 0 0 1-1.5-.4A3 3 0 0 1 12 7z"/>
+    </symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+      <line x1="6" y1="8" x2="6.01" y2="8" stroke-width="2.5"/>
+      <line x1="10" y1="8" x2="10.01" y2="8" stroke-width="2.5"/>
+      <line x1="14" y1="8" x2="14.01" y2="8" stroke-width="2.5"/>
+      <line x1="18" y1="8" x2="18.01" y2="8" stroke-width="2.5"/>
+      <line x1="6" y1="12" x2="6.01" y2="12" stroke-width="2.5"/>
+      <line x1="10" y1="12" x2="10.01" y2="12" stroke-width="2.5"/>
+      <line x1="14" y1="12" x2="14.01" y2="12" stroke-width="2.5"/>
+      <line x1="18" y1="12" x2="18.01" y2="12" stroke-width="2.5"/>
+      <line x1="8" y1="16" x2="16" y2="16"/>
+    </symbol>
+    <symbol id="i-backspace" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+      <line x1="18" y1="9" x2="12" y2="15"/>
+      <line x1="12" y1="9" x2="18" y2="15"/>
+    </symbol>
+    <symbol id="i-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 10 4 15 9 20"/>
+      <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+    </symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="2" width="8" height="4" rx="1"/>
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <path d="M9 12h6"/>
+      <path d="M9 16h6"/>
+    </symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+      <circle cx="12" cy="13" r="3.5"/>
+    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </symbol>
+    <symbol id="i-memory-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/>
+      <rect x="8" y="8" width="8" height="8" rx="1"/>
+      <line x1="9" y1="1" x2="9" y2="4"/>
+      <line x1="15" y1="1" x2="15" y2="4"/>
+      <line x1="9" y1="20" x2="9" y2="23"/>
+      <line x1="15" y1="20" x2="15" y2="23"/>
+      <line x1="20" y1="9" x2="23" y2="9"/>
+      <line x1="20" y1="15" x2="23" y2="15"/>
+      <line x1="1" y1="9" x2="4" y2="9"/>
+      <line x1="1" y1="15" x2="4" y2="15"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+      <path d="M21 3v5h-5"/>
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+      <path d="M3 21v-5h5"/>
+    </symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="20" height="15" x="2" y="3" rx="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="18" x2="12" y2="21"/>
+    </symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+    </symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+    </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </symbol>
+    <symbol id="i-usb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="19" r="2"/>
+      <circle cx="6" cy="11" r="1.5"/>
+      <rect x="16.5" y="9.5" width="3" height="3"/>
+      <line x1="12" y1="17" x2="12" y2="4"/>
+      <line x1="12" y1="12" x2="6" y2="11"/>
+      <line x1="12" y1="9" x2="18" y2="10"/>
+    </symbol>
+    <symbol id="i-youtube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/>
+      <polygon points="10 15 15 12 10 9" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="19" x2="12" y2="5"/>
+      <polyline points="5 12 12 5 19 12"/>
+    </symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/>
+      <path d="M14 11v6"/>
+      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+    </symbol>
+  </svg>
+
+  <div class="app">
+    <!-- Status Bar -->
+    <header class="status-bar">
+      <div class="tv-info" id="tvInfoTrigger" title="Settings">
+        <div class="tv-name-row">
+          <span class="tv-name" id="tvNameDisplay">Living Room TV</span>
+          <svg class="icon tv-name-chevron"><use href="#i-chevron-down"/></svg>
+        </div>
+        <div class="connection-line">
+          <span class="status-dot" id="connectionDot"></span>
+          <span id="connectionText">Connected · 12 ms</span>
+        </div>
+      </div>
+
+      <div class="status-bar-actions">
+        <button class="btn btn-icon-ghost" id="btnHeaderSettings" aria-label="Settings">
+          <svg class="icon"><use href="#i-settings"/></svg>
+        </button>
+
+        <div class="btn-power-wrap">
+          <button class="btn btn-power" id="btnPower" aria-label="Power">
+            <svg class="icon"><use href="#i-power"/></svg>
+          </button>
+          <svg class="power-ring" viewBox="0 0 48 48">
+            <circle id="powerProgress" cx="24" cy="24" r="16"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Panels Container -->
+    <main class="tab-panels">
+      <!-- =========================================
+           TAB 1: REMOTE (HERO D-PAD, NO SCROLL)
+           ========================================= -->
+      <section class="tab-page active" id="tab-remote">
+        <div class="remote-screen">
+          <!-- D-Pad Container -->
+          <div class="dpad-container">
+            <div class="dpad-touch-wrap">
+              <svg class="dpad" id="dpadSvg" viewBox="0 0 300 300" role="group" aria-label="Navigation">
+                <path class="seg" data-key="UP" aria-label="Up" d="M54.9 47.3 A140 140 0 0 1 245.1 47.3 L189.4 107.4 A58 58 0 0 0 110.6 107.4Z"/>
+                <path class="seg" data-key="RIGHT" aria-label="Right" d="M252.7 54.9 A140 140 0 0 1 252.7 245.1 L192.6 189.4 A58 58 0 0 0 192.6 110.6Z"/>
+                <path class="seg" data-key="DOWN"  aria-label="Down"  d="M245.1 252.7 A140 140 0 0 1 54.9 252.7 L110.6 192.6 A58 58 0 0 0 189.4 192.6Z"/>
+                <path class="seg" data-key="LEFT"  aria-label="Left"  d="M47.3 245.1 A140 140 0 0 1 47.3 54.9 L107.4 110.6 A58 58 0 0 0 107.4 189.4Z"/>
+
+                <!-- Segment Chevrons -->
+                <path class="seg-icon" d="M142 66 L150 58 L158 66"/>
+                <path class="seg-icon" d="M234 142 L242 150 L234 158"/>
+                <path class="seg-icon" d="M142 234 L150 242 L158 234"/>
+                <path class="seg-icon" d="M66 142 L58 150 L66 158"/>
+
+                <circle class="ok" data-key="OK" cx="150" cy="150" r="50"/>
+                <text class="ok-label" x="150" y="157" text-anchor="middle" dominant-baseline="middle">OK</text>
+              </svg>
+
+              <!-- Optional Gesture Trackpad Overlay -->
+              <div class="swipe-pad" id="swipePad">
+                <span class="swipe-hint">Swipe to navigate</span>
+                <span class="swipe-hint">Tap for OK</span>
+              </div>
+            </div>
+
+            <!-- Segmented Pill: Buttons vs Swipe -->
+            <div class="nav-mode-pill">
+              <button class="btn mode-btn active" id="btnModeButtons">Buttons</button>
+              <button class="btn mode-btn" id="btnModeSwipe">Swipe</button>
+            </div>
+          </div>
+
+          <!-- Under the ring: 3 Pill Buttons -->
+          <div class="pill-row">
+            <button class="btn btn-pill" id="btnBack" aria-label="Back">
+              <svg class="icon"><use href="#i-back"/></svg>
+              <span>Back</span>
+            </button>
+            <button class="btn btn-pill" id="btnHome" aria-label="Home">
+              <svg class="icon"><use href="#i-home"/></svg>
+              <span>Home</span>
+            </button>
+            <button class="btn btn-pill" id="btnMore" aria-label="More controls">
+              <svg class="icon"><use href="#i-more-dots"/></svg>
+              <span>More</span>
+            </button>
+          </div>
+
+          <!-- Lower Controls 3-Column Grid -->
+          <div class="lower-controls">
+            <!-- Left Column: Volume Rocker -->
+            <div class="col-vol">
+              <div class="vol-rocker">
+                <button class="btn vol-btn" id="btnVolUp" aria-label="Volume Up">
+                  <svg class="icon"><use href="#i-volume-up"/></svg>
+                </button>
+                <div class="vol-mid">
+                  <span style="font-size: 16px; font-weight: 700;">VOL</span>
+                </div>
+                <button class="btn vol-btn" id="btnVolDown" aria-label="Volume Down">
+                  <svg class="icon"><use href="#i-volume-down"/></svg>
+                </button>
+              </div>
+              <span class="vol-label">Volume</span>
+            </div>
+
+            <!-- Center Column: Media Transport -->
+            <div class="col-transport">
+              <div class="transport-skips">
+                <button class="btn btn-tactile btn-skip" id="btnSkipBack" aria-label="Rewind 10s">
+                  <svg class="icon"><use href="#i-skip-back-10"/></svg>
+                </button>
+                <button class="btn btn-tactile btn-skip" id="btnSkipFwd" aria-label="Forward 10s">
+                  <svg class="icon"><use href="#i-skip-forward-10"/></svg>
+                </button>
+              </div>
+              <button class="btn btn-playpause" id="btnPlayPause" aria-label="Play or Pause">
+                <svg class="icon" style="width: 28px; height: 28px;"><use href="#i-play"/></svg>
+              </button>
+            </div>
+
+            <!-- Right Column: Mute -->
+            <div class="col-mute">
+              <button class="btn btn-mute" id="btnMute" aria-label="Mute">
+                <svg class="icon"><use href="#i-volume-mute"/></svg>
+              </button>
+              <span class="mute-label">Mute</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================
+           TAB 2: TYPE TAB
+           ========================================= -->
+      <section class="tab-page" id="tab-type">
+        <div class="scroll-screen">
+          <div class="section-card">
+            <div class="card-header">
+              <h2 class="card-title">Type on your TV</h2>
+              <p class="card-subtitle">Search YouTube, type passwords or enter URLs with ease.</p>
+            </div>
+
+            <textarea class="type-input-box" id="typeInput" rows="3" placeholder="Search, password, anything…"></textarea>
+
+            <div class="type-switch-row">
+              <span class="switch-label">Send as I type</span>
+              <label class="switch-wrap">
+                <input type="checkbox" id="liveTypingSwitch" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <button class="btn btn-send-text" id="btnSendText">Send to TV</button>
+
+            <!-- Accessory Keys -->
+            <div class="accessory-bar">
+              <button class="btn btn-accessory" id="btnAccBackspace" aria-label="Backspace">
+                <svg class="icon icon-20"><use href="#i-backspace"/></svg>
+                <span>Delete</span>
+              </button>
+              <button class="btn btn-accessory" id="btnAccEnter" aria-label="Enter">
+                <svg class="icon icon-20"><use href="#i-enter"/></svg>
+                <span>Enter</span>
+              </button>
+              <button class="btn btn-accessory" id="btnAccPaste" aria-label="Paste">
+                <svg class="icon icon-20"><use href="#i-paste"/></svg>
+                <span>Paste</span>
+              </button>
+              <button class="btn btn-accessory" id="btnAccClear" aria-label="Clear">
+                <svg class="icon icon-20"><use href="#i-close"/></svg>
+                <span>Clear</span>
+              </button>
+            </div>
+
+            <div class="privacy-notice">
+              <svg class="icon icon-16"><use href="#i-check"/></svg>
+              <span>Typed text is not saved on server.</span>
+            </div>
+          </div>
+
+          <!-- Recents Chips -->
+          <div class="section-card">
+            <div class="recent-chips-box">
+              <div class="chips-header">
+                <span class="chips-title">Recent searches</span>
+                <span class="chips-clear" id="btnClearRecents">Clear history</span>
+              </div>
+              <div class="chips-wrap" id="recentChips">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Friendly search hint -->
+          <div class="tv-search-hint">
+            <svg class="icon icon-20"><use href="#i-tv"/></svg>
+            <span>Tip: Open the search bar on your TV app before typing.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================
+           TAB 3: SCREEN TAB (PERFECTLY CENTERED, NO SHARE)
+           ========================================= -->
+      <section class="tab-page" id="tab-screen">
+        <div class="scroll-screen">
+          <!-- 16:9 Screen Preview (Dead Centered) -->
+          <div class="screen-preview-card">
+            <div class="skeleton-shimmer" id="screenShimmer"></div>
+            
+            <div class="screen-empty-state" id="screenEmpty">
+              <svg class="icon" style="width: 48px; height: 48px;"><use href="#i-tv"/></svg>
+              <span style="font-size: 14px; font-weight: 600;">See what's on your TV</span>
+            </div>
+
+            <img class="screen-img" id="screenImg" alt="TV Screen Capture">
+          </div>
+
+          <!-- Capture & Actions (Share removed, clean Download + Full size) -->
+          <div class="screen-actions-bar">
+            <button class="btn btn-screen-action btn-capture-hero" id="btnCaptureHero">
+              <svg class="icon icon-20"><use href="#i-camera"/></svg>
+              <span>Capture Screen</span>
+            </button>
+            <button class="btn btn-screen-action" id="btnSaveScreen" style="display: none;">
+              <svg class="icon icon-20"><use href="#i-download"/></svg>
+              <span>Download</span>
+            </button>
+            <button class="btn btn-screen-action" id="btnViewScreen" style="display: none;">
+              <span>Full size</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================
+           TAB 4: FILES TAB (PHONE <-> TV <-> USB)
+           ========================================= -->
+      <section class="tab-page" id="tab-files">
+        <div class="scroll-screen">
+          <!-- Storage Destination Tabs (TV & USB) -->
+          <div class="storage-selector-bar" id="storageTabsWrap">
+            <button class="btn btn-storage-tab active" id="btnStorageTv" data-path="/storage/emulated/0/Download">
+              <svg class="icon icon-16"><use href="#i-tv"/></svg>
+              <span>TV Storage</span>
+            </button>
+          </div>
+
+          <!-- Directory Breadcrumb Toolbar -->
+          <div class="file-toolbar">
+            <button class="btn btn-icon-ghost" id="btnFolderUp" title="Up to parent folder">
+              <svg class="icon icon-20"><use href="#i-arrow-up"/></svg>
+            </button>
+            <span class="current-path" id="currentPathText">/storage/emulated/0/Download</span>
+            <button class="btn btn-icon-ghost" id="btnRefreshFiles" title="Refresh files">
+              <svg class="icon icon-16"><use href="#i-refresh"/></svg>
+            </button>
+          </div>
+
+          <!-- Upload Progress Banner -->
+          <div class="upload-progress-wrap" id="uploadProgressWrap">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600;">
+              <span id="uploadStatusText">Uploading file…</span>
+              <span id="uploadPercentText">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="uploadProgressBar"></div>
+            </div>
+          </div>
+
+          <!-- File Operations Action Bar -->
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-screen-action btn-capture-hero" id="btnTriggerUpload">
+              <svg class="icon icon-20"><use href="#i-upload"/></svg>
+              <span>Send File to TV / USB</span>
+            </button>
+            <button class="btn btn-screen-action" id="btnPasteFile" style="display: none;">
+              <svg class="icon icon-20"><use href="#i-paste"/></svg>
+              <span id="pasteActionText">Paste</span>
+            </button>
+            <input type="file" id="fileUploadInput" multiple style="display: none;">
+          </div>
+
+          <!-- File List -->
+          <div class="file-list-wrap" id="fileListWrap">
+            <!-- Dynamically populated file rows -->
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================
+           TAB 5: TOOLS TAB (LINK LAUNCHER & DASHBOARD)
+           ========================================= -->
+      <section class="tab-page" id="tab-tools">
+        <div class="scroll-screen">
+          <!-- 1. Open Link / Video Launcher Card -->
+          <div class="section-card">
+            <div class="card-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <svg class="icon" style="color: var(--accent);"><use href="#i-youtube"/></svg>
+                <h2 class="card-title">Open Link or Video on TV</h2>
+              </div>
+              <p class="card-subtitle">Paste a YouTube link or website URL to launch instantly on the TV.</p>
+            </div>
+
+            <div class="link-input-wrap">
+              <input type="text" class="link-text-input" id="linkUrlInput" placeholder="Paste YouTube link or web URL...">
+              
+              <div class="link-actions-group">
+                <button class="btn btn-link-action btn-link-smarttube" id="btnOpenSmartTube">
+                  <svg class="icon icon-16"><use href="#i-youtube"/></svg>
+                  <span>SmartTube</span>
+                </button>
+                <button class="btn btn-link-action btn-link-youtube" id="btnOpenYouTube">
+                  <svg class="icon icon-16"><use href="#i-youtube"/></svg>
+                  <span>YouTube</span>
+                </button>
+                <button class="btn btn-link-action btn-link-browser" id="btnOpenBrowser">
+                  <svg class="icon icon-16"><use href="#i-globe"/></svg>
+                  <span>Browser</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Free Up Memory (RAM Boost) Card -->
+          <div class="section-card">
+            <div class="card-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <svg class="icon" style="color: var(--ok);"><use href="#i-memory-chip"/></svg>
+                <h2 class="card-title">Free up memory</h2>
+              </div>
+              <p class="card-subtitle" id="ramSub">Closes background apps and clears system cache.</p>
+            </div>
+            <div class="tool-action-row">
+              <span style="font-size: 13px; color: var(--text-3);">System RAM optimization</span>
+              <button class="btn btn-tool btn-tool-accent" id="btnBoostRam">Clean now</button>
+            </div>
+          </div>
+
+          <!-- 3. Full Device Status Dashboard -->
+          <div class="section-card">
+            <div class="card-header">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <svg class="icon"><use href="#i-tv"/></svg>
+                  <h2 class="card-title">Device Status Dashboard</h2>
+                </div>
+                <button class="btn btn-icon-ghost" id="btnRefreshStatus" aria-label="Refresh Status">
+                  <svg class="icon icon-20"><use href="#i-refresh"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="dashboard-grid">
+              <div class="dash-card">
+                <span class="dash-label">Device &amp; Brand</span>
+                <span class="dash-value" id="dashModel">TCL Smart TV</span>
+              </div>
+              <div class="dash-card">
+                <span class="dash-label">Android Version</span>
+                <span class="dash-value" id="dashAndroid">Android 11 (API 30)</span>
+              </div>
+
+              <div class="dash-card span-2">
+                <div style="display: flex; justify-content: space-between;">
+                  <span class="dash-label">Memory (RAM)</span>
+                  <span class="dash-mono" id="dashRamText" style="font-size: 11px; color: var(--text-2);">-- / --</span>
+                </div>
+                <div class="dash-bar-wrap">
+                  <div class="dash-bar-fill" id="dashRamBar" style="width: 50%;"></div>
+                </div>
+              </div>
+
+              <div class="dash-card span-2">
+                <div style="display: flex; justify-content: space-between;">
+                  <span class="dash-label">Internal Storage (/data)</span>
+                  <span class="dash-mono" id="dashStorageText" style="font-size: 11px; color: var(--text-2);">-- / --</span>
+                </div>
+                <div class="dash-bar-wrap">
+                  <div class="dash-bar-fill" id="dashStorageBar" style="width: 50%; background: var(--warn);"></div>
+                </div>
+              </div>
+
+              <div class="dash-card">
+                <span class="dash-label">Display</span>
+                <span class="dash-value dash-mono" id="dashDisplay">1280x720</span>
+              </div>
+              <div class="dash-card">
+                <span class="dash-label">Processor</span>
+                <span class="dash-value" id="dashCpu">Quad-Core ARMv7</span>
+              </div>
+
+              <div class="dash-card">
+                <span class="dash-label">USB Storage</span>
+                <span class="dash-value" id="dashUsb">None detected</span>
+              </div>
+              <div class="dash-card">
+                <span class="dash-label">System Uptime</span>
+                <span class="dash-value dash-mono" id="dashUptime">--</span>
+              </div>
+
+              <div class="dash-card span-2">
+                <span class="dash-label">Active Window / App</span>
+                <span class="dash-value dash-mono" id="dashFocus" style="font-size: 12px; color: var(--text-2);">Launcher</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Tab Bar (5 Tabs) -->
+    <nav class="bottom-tabs">
+      <button class="btn tab-item active" data-tab="remote" aria-label="Remote">
+        <svg class="icon"><use href="#i-tv"/></svg>
+        <span class="tab-label">Remote</span>
+        <span class="tab-dot"></span>
+      </button>
+
+      <button class="btn tab-item" data-tab="type" aria-label="Type">
+        <svg class="icon"><use href="#i-keyboard"/></svg>
+        <span class="tab-label">Type</span>
+        <span class="tab-dot"></span>
+      </button>
+
+      <button class="btn tab-item" data-tab="screen" aria-label="Screen">
+        <svg class="icon"><use href="#i-camera"/></svg>
+        <span class="tab-label">Screen</span>
+        <span class="tab-dot"></span>
+      </button>
+
+      <button class="btn tab-item" data-tab="files" aria-label="Files">
+        <svg class="icon"><use href="#i-folder"/></svg>
+        <span class="tab-label">Files</span>
+        <span class="tab-dot"></span>
+      </button>
+
+      <button class="btn tab-item" data-tab="tools" aria-label="Tools">
+        <svg class="icon"><use href="#i-sparkle"/></svg>
+        <span class="tab-label">Tools</span>
+        <span class="tab-dot"></span>
+      </button>
+    </nav>
+
+    <!-- Bottom Sheet Backdrop -->
+    <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+    <!-- "More controls" Bottom Sheet -->
+    <div class="bottom-sheet" id="moreControlsSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">More controls</h3>
+        <button class="btn btn-sheet-close" aria-label="Close">
+          <svg class="icon"><use href="#i-close"/></svg>
+        </button>
+      </div>
+
+      <div class="sheet-list">
+        <button class="btn sheet-item-btn" id="sheetBtnInput">
+          <div class="sheet-item-icon">
+            <svg class="icon"><use href="#i-input"/></svg>
+          </div>
+          <div class="sheet-item-content">
+            <span class="sheet-item-title">Input source</span>
+            <span class="sheet-item-sub">Open native source menu on TV</span>
+          </div>
+        </button>
+
+        <button class="btn sheet-item-btn" id="sheetBtnSettings">
+          <div class="sheet-item-icon">
+            <svg class="icon"><use href="#i-settings"/></svg>
+          </div>
+          <div class="sheet-item-content">
+            <span class="sheet-item-title">TV settings</span>
+            <span class="sheet-item-sub">Open system preferences and network</span>
+          </div>
+        </button>
+
+        <button class="btn sheet-item-btn" id="sheetBtnScreenOff">
+          <div class="sheet-item-icon">
+            <svg class="icon"><use href="#i-power"/></svg>
+          </div>
+          <div class="sheet-item-content">
+            <span class="sheet-item-title">Power off TV</span>
+            <span class="sheet-item-sub">Turn off the TV immediately</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+
+
+    <!-- Settings Bottom Sheet -->
+    <div class="bottom-sheet" id="settingsSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Remote settings</h3>
+        <button class="btn btn-sheet-close" aria-label="Close">
+          <svg class="icon"><use href="#i-close"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label-wrap">
+            <span class="settings-label">TV name</span>
+            <span class="settings-sub">Label shown in header</span>
+          </div>
+          <input type="text" id="tvNameInput" style="background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 13px; width: 140px; text-align: right;" value="Living Room TV">
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-label-wrap">
+            <span class="settings-label">Theme</span>
+            <span class="settings-sub">Visual appearance</span>
+          </div>
+          <select id="themeSelect" style="background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 13px;">
+            <option value="dark">Dark Graphite</option>
+            <option value="light">Light Warm</option>
+            <option value="auto">System Default</option>
+          </select>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-label-wrap">
+            <span class="settings-label">Haptic feedback</span>
+            <span class="settings-sub">Vibrate phone on tap</span>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="hapticsSwitch" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-label-wrap">
+            <span class="settings-label">Left-hand mode</span>
+            <span class="settings-sub">Mirrors volume and mute columns</span>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="leftHandSwitch">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Command sent</div>
+  </div>
+
+  <script src="js/haptics.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
