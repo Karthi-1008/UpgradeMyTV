@@ -29,7 +29,9 @@ backup/settings/
 test_java_adb/
 downloads/
 tvpowerhub_strings.txt
-recordings/
+/recordings/
+!docs/recordings/
+!docs/recordings/*.mp4
 power.txt
 
 # Root temporary screenshots (Canonical documentation screenshots are in docs/screenshots/)

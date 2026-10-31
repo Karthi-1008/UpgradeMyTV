@@ -16,6 +16,7 @@
 
 [Quick Start](#-quick-start) •
 [Features](#-key-features) •
+[Video Demos](#-live-video-demonstrations) •
 [Before vs. After](#-visual-proof--before-vs-after) •
 [Hardware Specs](#-dedicated-hardware-variant-tcl-c06) •
 [Porting Guide for Agents](#-universal-tv-porting-guide-for-ai-agents) •
@@ -30,6 +31,43 @@
 **UpgradeMyTV (TV Power Hub)** is a standalone Android TV service that embeds an ultra-lightweight Java HTTP server and an Accessibility automation engine into an ultra-compact (~100 KB) APK. 
 
 Unlike traditional remote apps that rely on cloud relay servers, slow ADB polling, or fragile IR blasters, TV Power Hub serves a tactile, offline HTML5 Progressive Web Remote directly from your TV's local IP address (`http://<TV_IP>:8088`). Point your phone's camera at the on-screen QR code, and you are immediately in control.
+
+---
+
+## 🎬 Live Video Demonstrations
+
+Real-time synchronized capture showing the tactile mobile web remote alongside the TCL Android TV screen:
+
+<div align="center">
+
+<table width="100%">
+  <thead>
+    <tr>
+      <th width="35%" align="center">📱 Tactile Mobile Web Remote</th>
+      <th width="65%" align="center">📺 TCL Android TV Screen</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" valign="top">
+        <video src="docs/recordings/mobile_remote_demo.mp4" controls width="100%" muted playsinline></video>
+        <p align="center">
+          <sub>📱 <i>Zero-latency D-Pad taps, volume sliders, and input switches</i></sub><br/>
+          <sub><a href="docs/recordings/mobile_remote_demo.mp4">▶️ Watch / Download Mobile Demo (4.1 MB)</a></sub>
+        </p>
+      </td>
+      <td align="center" valign="top">
+        <video src="docs/recordings/tv_display_demo.mp4" controls width="100%" muted playsinline></video>
+        <p align="center">
+          <sub>📺 <i>Instant focus navigation, zero-freeze source overlay, and media control</i></sub><br/>
+          <sub><a href="docs/recordings/tv_display_demo.mp4">▶️ Watch / Download TV Screen Demo (1.7 MB)</a></sub>
+        </p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
 
 ---
 
