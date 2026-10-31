@@ -1,0 +1,45 @@
+================================================================================
+  UPGRADEMYTV - EMERGENCY LOCAL RESTORE POINT (STABLE WORKING V1)
+================================================================================
+Timestamp:    2026-10-31 13:30 IST
+Git Commit:   ced93da ("feat: complete TV Power Hub release...")
+Target TV:    TCL Smart TV C06 / BeyondTV / RTD2851 / Android 11 (API 30)
+
+--------------------------------------------------------------------------------
+VERIFIED WORKING CAPABILITIES IN THIS RESTORE POINT:
+--------------------------------------------------------------------------------
+1. Tactile Web Remote:
+   - Hero SVG D-Pad: UP (19), DOWN (20), LEFT (21), RIGHT (22), OK (23).
+   - Single tap registration: 100% verified (no double-clicking).
+   - Hold-to-repeat: Smooth continuous scrolling when holding a direction (>350ms).
+   - Volume: Vol Up (24), Vol Down (25), Mute (164) with native Android flag UI.
+   - System Keys: Back (4), Home (3), Power Off (26).
+   - Media Transport: Play/Pause (85), Skip Back 10s (89), Skip Forward 10s (90).
+   - Remote Keyboard: Live typing injected directly into Android input fields.
+
+2. On-Screen TV Source Menu:
+   - "Input source" button in More controls triggers TCL ShowWindowService (com.tcl.insrc.SHOW_WINDOW).
+   - Displays native TV overlay with Home, TV, HDMI 1, HDMI 2, AV, Streaming channels.
+   - Zero settings redirection; zero video player 2005 errors.
+
+3. System Dashboard & Diagnostics:
+   - Uptime: Monotonic non-negative counter via SystemClock.elapsedRealtime().
+   - Active App: Real-time detection showing friendly app titles ("TV Power New", "Android TV Home", "YouTube", etc.).
+   - RAM: Live free/total memory gauge.
+
+4. TV System Safety:
+   - Zero USB debugging dependency during normal use; TV USB ports remain completely free for pen drives.
+   - Zero-root execution via accessibility foreground service.
+
+--------------------------------------------------------------------------------
+HOW TO RESTORE IF SOMETHING GOES WRONG:
+--------------------------------------------------------------------------------
+OPTION A (Automatic One-Click):
+  1. Double click `restore_to_tv.bat` in this folder.
+  2. Type your TV's IP address (e.g. 192.168.0.7) and press Enter.
+  3. The script will reinstall `TVPowerNew_v1_working.apk`, start the server, and disconnect ADB.
+
+OPTION B (Source Code Rollback):
+  1. If code edits break the build, extract `tvpowernew_src_snapshot.zip` over `tvpowernew_src/`.
+  2. Run `powershell -ExecutionPolicy Bypass -File .\build_apk.ps1` to recompile.
+================================================================================

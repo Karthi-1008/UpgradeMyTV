@@ -16,13 +16,15 @@ TVPowerNew_aligned.apk
 *.py
 *.sh
 *.bat
+!backup/restore_point_v1_working/restore_to_tv.bat
 *.vbs
 /web/
 *.jar
 *.dex
 KeyHelp.apk
 rcu.apk
-backup/
+backup/apks/
+backup/settings/
 test_java_adb/
 downloads/
 tvpowerhub_strings.txt
