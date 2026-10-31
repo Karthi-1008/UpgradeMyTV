@@ -16,6 +16,7 @@ TVPowerNew_aligned.apk
 *.py
 *.sh
 *.bat
+!record_tv_screen.bat
 !backup/restore_point_v1_working/restore_to_tv.bat
 *.vbs
 /web/
