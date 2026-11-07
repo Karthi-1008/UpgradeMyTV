@@ -19,16 +19,19 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TvAccessibilityService extends AccessibilityService {
     private static final String TAG = "TvAccessibilityService";
     private static volatile TvAccessibilityService sInstance;
 
-    private static int sScreenWidth = 1280;
-    private static int sScreenHeight = 720;
+    private static int sScreenWidth = 1920;
+    private static int sScreenHeight = 1080;
 
     @Override
     public void onServiceConnected() {
@@ -44,15 +47,15 @@ public class TvAccessibilityService extends AccessibilityService {
             if (wm != null) {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getRealMetrics(dm);
-                sScreenWidth = dm.widthPixels > 0 ? dm.widthPixels : 1280;
-                sScreenHeight = dm.heightPixels > 0 ? dm.heightPixels : 720;
+                sScreenWidth = dm.widthPixels > 0 ? dm.widthPixels : 1920;
+                sScreenHeight = dm.heightPixels > 0 ? dm.heightPixels : 1080;
             }
         } catch (Throwable ignored) {}
     }
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        // No-op
+        // App Lock / Parental PIN completely removed per user request
     }
 
     @Override
@@ -123,7 +126,6 @@ public class TvAccessibilityService extends AccessibilityService {
     }
 
     public static boolean doInputSource(Context context) {
-        // 1. TCL native on-screen Source Choice popup service
         try {
             Intent intent = new Intent("com.tcl.insrc.SHOW_WINDOW");
             intent.setComponent(new android.content.ComponentName("com.tcl.tv", "com.tcl.sourcemenu.insrc.ShowWindowService"));
@@ -133,9 +135,7 @@ public class TvAccessibilityService extends AccessibilityService {
                 context.startService(intent);
             }
             return true;
-        } catch (Throwable t) {
-            Log.w(TAG, "ShowWindowService start failed: " + t.getMessage());
-        }
+        } catch (Throwable ignored) {}
 
         try {
             Intent intent = new Intent("com.tcl.insrc.SHOW_WINDOW");
@@ -147,7 +147,6 @@ public class TvAccessibilityService extends AccessibilityService {
             return true;
         } catch (Throwable ignored) {}
 
-        // Broadcast fallbacks
         try {
             context.sendBroadcast(new Intent("com.tcl.ShortcutKey"));
             context.sendBroadcast(new Intent("com.tcl.action.SHOW_INPUT_SOURCE"));
@@ -165,7 +164,7 @@ public class TvAccessibilityService extends AccessibilityService {
         String pkg = null;
         if (sInstance != null) {
             try {
-                AccessibilityNodeInfo root = sInstance.getRootInActiveWindow();
+                AccessibilityNodeInfo root = getBestRootNode();
                 if (root != null && root.getPackageName() != null) {
                     pkg = root.getPackageName().toString();
                 }
@@ -176,7 +175,7 @@ public class TvAccessibilityService extends AccessibilityService {
             try {
                 android.app.ActivityManager am = (android.app.ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
                 if (am != null) {
-                    java.util.List<android.app.ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                    List<android.app.ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
                     if (procs != null && !procs.isEmpty()) {
                         for (android.app.ActivityManager.RunningAppProcessInfo pi : procs) {
                             if (pi.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
@@ -193,7 +192,6 @@ public class TvAccessibilityService extends AccessibilityService {
             return "Android TV Home";
         }
 
-        // Clean user-friendly app titles
         if (pkg.contains("launcher") || pkg.contains("waterfall") || pkg.contains("tvos") || pkg.contains("leanbacklauncher")) {
             return "Android TV Home";
         } else if (pkg.equals("com.google.android.youtube.tv") || pkg.equals("com.google.android.youtube")) {
@@ -209,7 +207,7 @@ public class TvAccessibilityService extends AccessibilityService {
         } else if (pkg.equals("com.tcl.browser")) {
             return "TCL Browser";
         } else if (pkg.contains("tvpowerhub")) {
-            return "TV Power New";
+            return "TV Power House";
         } else if (pkg.contains("tvinput") || pkg.contains("shortcutmenu")) {
             return "Input Sources";
         }
@@ -251,70 +249,183 @@ public class TvAccessibilityService extends AccessibilityService {
                 am.dispatchMediaKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, keycode));
             } catch (Throwable ignored) {}
         }
+    }
 
-        // Direct fallback navigation in media players
-        if (keycode == 89) { // Rewind / Skip 10s back -> Left focus or swipe
-            sendDpad(21);
-        } else if (keycode == 90) { // Fast Forward / Skip 10s forward -> Right focus or swipe
-            sendDpad(22);
-        } else if (keycode == 85 || keycode == 126 || keycode == 127) { // Play/Pause -> Click
-            sendDpad(23);
+    // =========================================================================
+    // Multi-Window & True Interactive Root Node Resolution
+    // =========================================================================
+
+    public static AccessibilityNodeInfo getBestRootNode() {
+        if (sInstance == null) return null;
+
+        // 1. Try standard active window root
+        AccessibilityNodeInfo root = null;
+        try {
+            root = sInstance.getRootInActiveWindow();
+        } catch (Throwable ignored) {}
+
+        if (root != null) {
+            Rect r = new Rect();
+            root.getBoundsInScreen(r);
+            if (r.width() > 0 && r.height() > 0) return root;
+        }
+
+        // 2. Iterate interactive windows in Z-order
+        try {
+            List<AccessibilityWindowInfo> windows = sInstance.getWindows();
+            if (windows != null && !windows.isEmpty()) {
+                // First: Focused window
+                for (AccessibilityWindowInfo win : windows) {
+                    if (win != null && win.isFocused()) {
+                        AccessibilityNodeInfo wRoot = win.getRoot();
+                        if (wRoot != null) return wRoot;
+                    }
+                }
+                // Second: Topmost APPLICATION window
+                for (AccessibilityWindowInfo win : windows) {
+                    if (win != null && win.getType() == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        AccessibilityNodeInfo wRoot = win.getRoot();
+                        if (wRoot != null) return wRoot;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        return root;
+    }
+
+    private static AccessibilityNodeInfo getCurrentFocusNode(AccessibilityNodeInfo root) {
+        if (root == null) return null;
+        AccessibilityNodeInfo focused = null;
+        try {
+            focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if (focused == null) {
+                focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+            }
+        } catch (Throwable ignored) {}
+
+        // Fallback: search all windows
+        if (focused == null && sInstance != null) {
+            try {
+                List<AccessibilityWindowInfo> windows = sInstance.getWindows();
+                if (windows != null) {
+                    for (AccessibilityWindowInfo win : windows) {
+                        if (win != null) {
+                            AccessibilityNodeInfo wRoot = win.getRoot();
+                            if (wRoot != null) {
+                                focused = wRoot.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+                                if (focused == null) {
+                                    focused = wRoot.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+                                }
+                                if (focused != null) break;
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // If no node has focus yet inside the app, pick the first visible interactive element
+        if (focused == null) {
+            focused = findBestInteractiveNode(root);
+            if (focused != null) {
+                try {
+                    focused.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                    focused.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
+                } catch (Throwable ignored) {}
+            }
+        }
+
+        return focused;
+    }
+
+    private static AccessibilityNodeInfo findBestInteractiveNode(AccessibilityNodeInfo root) {
+        if (root == null) return null;
+        List<AccessibilityNodeInfo> candidates = new ArrayList<>();
+        Rect screenRect = new Rect(0, 0, sScreenWidth, sScreenHeight);
+        collectInteractiveNodes(root, candidates, screenRect);
+        if (!candidates.isEmpty()) {
+            return candidates.get(0);
+        }
+        return null;
+    }
+
+    private static void collectInteractiveNodes(AccessibilityNodeInfo node, List<AccessibilityNodeInfo> list, Rect screenRect) {
+        if (node == null || !node.isVisibleToUser()) return;
+        Rect r = new Rect();
+        node.getBoundsInScreen(r);
+        if (r.width() > 0 && r.height() > 0 && Rect.intersects(screenRect, r)) {
+            // Must NOT be a massive full-screen background container (e.g. DecorView)
+            boolean isNotHugeWrapper = r.width() < screenRect.width() * 0.95 || r.height() < screenRect.height() * 0.95;
+            if ((node.isFocusable() || node.isClickable()) && isNotHugeWrapper) {
+                list.add(node);
+            }
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                collectInteractiveNodes(child, list, screenRect);
+            }
         }
     }
+
+    private static AccessibilityNodeInfo findScrollableParent(AccessibilityNodeInfo node) {
+        AccessibilityNodeInfo cur = node;
+        while (cur != null) {
+            if (cur.isScrollable()) {
+                return cur;
+            }
+            cur = cur.getParent();
+        }
+        return null;
+    }
+
+    private static AccessibilityNodeInfo findClickableParent(AccessibilityNodeInfo node) {
+        AccessibilityNodeInfo cur = node;
+        while (cur != null) {
+            if (cur.isClickable()) {
+                return cur;
+            }
+            cur = cur.getParent();
+        }
+        return null;
+    }
+
+    // =========================================================================
+    // Comprehensive D-Pad Navigation Engine (Native + Spatial Geometry)
+    // =========================================================================
 
     private static long sLastDpadTime = 0;
     private static int sLastDpadKey = 0;
 
     public static boolean sendDpad(int keycode) {
         if (sInstance == null) return false;
-        long now = android.os.SystemClock.uptimeMillis();
-        if (keycode == sLastDpadKey && (now - sLastDpadTime) < 70) {
-            return true; // Debounce rapid duplicate ghost tap
+        long now = System.currentTimeMillis();
+        if (keycode == sLastDpadKey && (now - sLastDpadTime) < 60) {
+            return true; // Debounce rapid synthetic duplicate
         }
         sLastDpadKey = keycode;
         sLastDpadTime = now;
+
         try {
             sInstance.updateScreenDimensions();
-            AccessibilityNodeInfo root = sInstance.getRootInActiveWindow();
+            AccessibilityNodeInfo root = getBestRootNode();
+            AccessibilityNodeInfo focused = getCurrentFocusNode(root);
 
-            AccessibilityNodeInfo focused = null;
-            if (root != null) {
-                focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
-                if (focused == null) {
-                    focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-                }
-                if (focused == null) {
-                    focused = findFirstFocusable(root);
-                    if (focused != null) {
-                        focused.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-                        focused.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
-                    }
-                }
-            }
-
-            int direction = -1;
-            if (keycode == 19) direction = View.FOCUS_UP;
-            else if (keycode == 20) direction = View.FOCUS_DOWN;
-            else if (keycode == 21) direction = View.FOCUS_LEFT;
-            else if (keycode == 22) direction = View.FOCUS_RIGHT;
-            else if (keycode == 23 || keycode == 66) {
-                // DPAD_CENTER or ENTER
+            // Handle DPAD_CENTER (OK) and ENTER (F-13: click OR tap, never both)
+            if (keycode == 23 || keycode == 66) {
                 if (focused != null) {
-                    AccessibilityNodeInfo clickable = focused;
-                    while (clickable != null && !clickable.isClickable()) {
-                        clickable = clickable.getParent();
+                    boolean ok = focused.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    if (!ok) ok = focused.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+                    if (!ok) {
+                        AccessibilityNodeInfo parentClickable = findClickableParent(focused);
+                        if (parentClickable != null) {
+                            ok = parentClickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        }
                     }
-                    if (clickable != null) {
-                        boolean ok = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        if (!ok) ok = clickable.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-                        if (ok) return true;
-                    } else {
-                        boolean ok = focused.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        if (!ok) ok = focused.performAction(AccessibilityNodeInfo.ACTION_SELECT);
-                        if (ok) return true;
-                    }
+                    if (ok) return true; // Action was processed by UI node, do NOT tap!
                     Rect bounds = new Rect();
-                    (clickable != null ? clickable : focused).getBoundsInScreen(bounds);
+                    focused.getBoundsInScreen(bounds);
                     if (bounds.width() > 0 && bounds.height() > 0) {
                         dispatchTap(bounds.centerX(), bounds.centerY());
                         return true;
@@ -324,32 +435,126 @@ public class TvAccessibilityService extends AccessibilityService {
                 return true;
             }
 
+            int direction = -1;
+            if (keycode == 19) direction = View.FOCUS_UP;
+            else if (keycode == 20) direction = View.FOCUS_DOWN;
+            else if (keycode == 21) direction = View.FOCUS_LEFT;
+            else if (keycode == 22) direction = View.FOCUS_RIGHT;
+
             if (direction != -1) {
+                // 1. Try standard focusSearch first
                 if (focused != null) {
-                    AccessibilityNodeInfo next = focused.focusSearch(direction);
-                    if (next != null) {
+                    AccessibilityNodeInfo next = null;
+                    try {
+                        next = focused.focusSearch(direction);
+                    } catch (Throwable ignored) {}
+
+                    if (next != null && !next.equals(focused)) {
                         next.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
                         next.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                next.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());
+                            }
+                        } catch (Throwable ignored) {}
                         return true;
                     }
                 }
 
-                // Fallback to gesture swipe for custom UI / video players
+                // 2. Spatial Geometric Directional Search across the entire visible window
+                if (root != null) {
+                    List<AccessibilityNodeInfo> candidates = new ArrayList<>();
+                    Rect screenRect = new Rect(0, 0, sScreenWidth, sScreenHeight);
+                    collectInteractiveNodes(root, candidates, screenRect);
+
+                    Rect curRect = new Rect();
+                    if (focused != null) {
+                        focused.getBoundsInScreen(curRect);
+                    } else {
+                        // Default reference point
+                        curRect.set(sScreenWidth / 2 - 20, sScreenHeight / 2 - 20, sScreenWidth / 2 + 20, sScreenHeight / 2 + 20);
+                    }
+
+                    AccessibilityNodeInfo bestCandidate = null;
+                    double bestScore = Double.MAX_VALUE;
+
+                    for (AccessibilityNodeInfo cand : candidates) {
+                        if (cand == null || cand.equals(focused)) continue;
+                        Rect candRect = new Rect();
+                        cand.getBoundsInScreen(candRect);
+
+                        double score = Double.MAX_VALUE;
+                        if (direction == View.FOCUS_RIGHT) {
+                            if (candRect.centerX() > curRect.centerX() + 6) {
+                                double dx = candRect.centerX() - curRect.centerX();
+                                double dy = Math.abs(candRect.centerY() - curRect.centerY());
+                                score = dx + (dy * 2.2);
+                            }
+                        } else if (direction == View.FOCUS_LEFT) {
+                            if (candRect.centerX() < curRect.centerX() - 6) {
+                                double dx = curRect.centerX() - candRect.centerX();
+                                double dy = Math.abs(candRect.centerY() - curRect.centerY());
+                                score = dx + (dy * 2.2);
+                            }
+                        } else if (direction == View.FOCUS_DOWN) {
+                            if (candRect.centerY() > curRect.centerY() + 6) {
+                                double dy = candRect.centerY() - curRect.centerY();
+                                double dx = Math.abs(candRect.centerX() - curRect.centerX());
+                                score = dy + (dx * 1.8);
+                            }
+                        } else if (direction == View.FOCUS_UP) {
+                            if (candRect.centerY() < curRect.centerY() - 6) {
+                                double dy = curRect.centerY() - candRect.centerY();
+                                double dx = Math.abs(candRect.centerX() - curRect.centerX());
+                                score = dy + (dx * 1.8);
+                            }
+                        }
+
+                        if (score < bestScore) {
+                            bestScore = score;
+                            bestCandidate = cand;
+                        }
+                    }
+
+                    if (bestCandidate != null) {
+                        bestCandidate.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                        bestCandidate.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                bestCandidate.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());
+                            }
+                        } catch (Throwable ignored) {}
+                        return true;
+                    }
+                }
+
+                // 3. Container Scroll fallback when reaching edge of row or list
+                AccessibilityNodeInfo scrollable = (focused != null) ? findScrollableParent(focused) : null;
+                if (scrollable != null) {
+                    if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+                        scrollable.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                    } else {
+                        scrollable.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                    }
+                    return true;
+                }
+
+                // 4. Edge fallback swipe (custom video player controls / canvases)
                 float cx = sScreenWidth / 2.0f;
                 float cy = sScreenHeight / 2.0f;
-                if (keycode == 19) { // UP -> swipe down
-                    dispatchSwipe(cx, cy - 140, cx, cy + 140, 60);
-                } else if (keycode == 20) { // DOWN -> swipe up
-                    dispatchSwipe(cx, cy + 140, cx, cy - 140, 60);
-                } else if (keycode == 21) { // LEFT -> swipe right
-                    dispatchSwipe(cx - 200, cy, cx + 200, cy, 60);
-                } else if (keycode == 22) { // RIGHT -> swipe left
-                    dispatchSwipe(cx + 200, cy, cx - 200, cy, 60);
+                if (keycode == 19) { // UP
+                    dispatchSwipe(cx, cy - 120, cx, cy + 120, 60);
+                } else if (keycode == 20) { // DOWN
+                    dispatchSwipe(cx, cy + 120, cx, cy - 120, 60);
+                } else if (keycode == 21) { // LEFT
+                    dispatchSwipe(cx - 180, cy, cx + 180, cy, 60);
+                } else if (keycode == 22) { // RIGHT
+                    dispatchSwipe(cx + 180, cy, cx - 180, cy, 60);
                 }
                 return true;
             }
         } catch (Throwable t) {
-            Log.w(TAG, "Error in sendDpad: " + t.getMessage());
+            Log.e(TAG, "Error in sendDpad: " + t.getMessage(), t);
         }
         return false;
     }
@@ -381,11 +586,16 @@ public class TvAccessibilityService extends AccessibilityService {
         }
     }
 
+    // =========================================================================
+    // Live Remote Text Input & Backspace (Search Bars, Passwords, URLs)
+    // =========================================================================
+
     public static boolean sendText(String text) {
         if (sInstance == null || text == null) return false;
         try {
-            AccessibilityNodeInfo root = sInstance.getRootInActiveWindow();
+            AccessibilityNodeInfo root = getBestRootNode();
             if (root == null) return false;
+
             AccessibilityNodeInfo target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (target == null) {
                 target = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
@@ -393,6 +603,23 @@ public class TvAccessibilityService extends AccessibilityService {
             if (target == null || !target.isEditable()) {
                 target = findEditableNode(root);
             }
+
+            // Also check all windows for editable input
+            if (target == null) {
+                List<AccessibilityWindowInfo> windows = sInstance.getWindows();
+                if (windows != null) {
+                    for (AccessibilityWindowInfo win : windows) {
+                        if (win != null) {
+                            AccessibilityNodeInfo wRoot = win.getRoot();
+                            if (wRoot != null) {
+                                target = findEditableNode(wRoot);
+                                if (target != null) break;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (target != null) {
                 Bundle args = new Bundle();
                 args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
@@ -407,8 +634,9 @@ public class TvAccessibilityService extends AccessibilityService {
     public static boolean doBackspace() {
         if (sInstance == null) return false;
         try {
-            AccessibilityNodeInfo root = sInstance.getRootInActiveWindow();
+            AccessibilityNodeInfo root = getBestRootNode();
             if (root == null) return false;
+
             AccessibilityNodeInfo target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (target == null || !target.isEditable()) {
                 target = findEditableNode(root);
@@ -416,7 +644,9 @@ public class TvAccessibilityService extends AccessibilityService {
             if (target != null && target.getText() != null) {
                 String current = target.getText().toString();
                 if (!current.isEmpty()) {
-                    String updated = current.substring(0, current.length() - 1);
+                    int len = current.length();
+                    int offset = Character.offsetByCodePoints(current, 0, Math.max(0, Character.codePointCount(current, 0, len) - 1));
+                    String updated = current.substring(0, offset);
                     Bundle args = new Bundle();
                     args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, updated);
                     return target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
@@ -424,19 +654,6 @@ public class TvAccessibilityService extends AccessibilityService {
             }
         } catch (Throwable ignored) {}
         return false;
-    }
-
-    private static AccessibilityNodeInfo findFirstFocusable(AccessibilityNodeInfo node) {
-        if (node == null) return null;
-        if (node.isFocusable() || node.isClickable()) return node;
-        for (int i = 0; i < node.getChildCount(); i++) {
-            AccessibilityNodeInfo child = node.getChild(i);
-            if (child != null) {
-                AccessibilityNodeInfo res = findFirstFocusable(child);
-                if (res != null) return res;
-            }
-        }
-        return null;
     }
 
     private static AccessibilityNodeInfo findEditableNode(AccessibilityNodeInfo node) {
@@ -458,23 +675,36 @@ public class TvAccessibilityService extends AccessibilityService {
         }
         try {
             final boolean[] done = new boolean[]{false};
+            final File tempDest = new File(dest.getParentFile(), dest.getName() + ".tmp");
             sInstance.takeScreenshot(Display.DEFAULT_DISPLAY, sInstance.getMainExecutor(), new TakeScreenshotCallback() {
                 @Override
                 public void onSuccess(ScreenshotResult result) {
+                    android.hardware.HardwareBuffer hwBuffer = null;
+                    Bitmap bitmap = null;
+                    Bitmap copy = null;
                     try {
-                        Bitmap bitmap = Bitmap.wrapHardwareBuffer(result.getHardwareBuffer(), result.getColorSpace());
+                        hwBuffer = result.getHardwareBuffer();
+                        bitmap = Bitmap.wrapHardwareBuffer(hwBuffer, result.getColorSpace());
                         if (bitmap != null) {
-                            Bitmap copy = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                            copy = bitmap.copy(Bitmap.Config.ARGB_8888, false);
                             if (dest.getParentFile() != null) dest.getParentFile().mkdirs();
-                            FileOutputStream fos = new FileOutputStream(dest);
-                            copy.compress(Bitmap.CompressFormat.PNG, 85, fos);
-                            fos.flush();
-                            fos.close();
+                            try (FileOutputStream fos = new FileOutputStream(tempDest)) {
+                                copy.compress(Bitmap.CompressFormat.JPEG, 85, fos);
+                                fos.flush();
+                            }
+                            if (tempDest.exists() && tempDest.length() > 0) {
+                                if (dest.exists()) dest.delete();
+                                tempDest.renameTo(dest);
+                            }
                             Log.i(TAG, "Native accessibility screenshot saved to " + dest.getAbsolutePath());
                         }
                     } catch (Throwable t) {
                         Log.e(TAG, "Failed to save screenshot bitmap: " + t.getMessage());
+                        if (tempDest.exists()) tempDest.delete();
                     } finally {
+                        if (copy != null) copy.recycle();
+                        if (bitmap != null) bitmap.recycle();
+                        if (hwBuffer != null) hwBuffer.close();
                         synchronized (done) {
                             done[0] = true;
                             done.notifyAll();
@@ -494,7 +724,7 @@ public class TvAccessibilityService extends AccessibilityService {
 
             synchronized (done) {
                 if (!done[0]) {
-                    done.wait(1500);
+                    done.wait(3500);
                 }
             }
             return dest.exists() && dest.length() > 0;

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TV Power New</string>
+    <string name="app_name">TV Power House</string>
+    <string name="restart_server">Restart server</string>
+    <string name="status_active">Server active</string>
+    <string name="status_starting">Starting…</string>
+    <string name="status_no_network">No network</string>
+    <string name="status_stopped">Server stopped</string>
 </resources>

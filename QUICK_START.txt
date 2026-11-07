@@ -1,0 +1,70 @@
+================================================================================
+TV Power Hub (TVPowerNew) v2.1.0 - Complete Android TV Power Hub & Web Remote
+================================================================================
+
+This package contains everything needed to install, run, customize, and rebuild
+the TV Power Hub app and its web remote for TCL and Android TV devices.
+
+PACKAGE CONTENTS:
+--------------------------------------------------------------------------------
+1. TVPowerNew.apk               - Pre-built, signed, and production-ready APK
+2. tvpowernew_src/              - Complete Java source code & Android project tree
+3. web/                         - Complete modern mobile-optimized Web Remote frontend
+4. build_apk.ps1                - 1-click PowerShell build script (compiles Java,
+                                  DEX, AAPT2 packaging, zip-align, and signing)
+5. TCL System Libraries         - com.tcl.os.system.jar, tcl-framework.jar, etc.
+6. Documentation                - README.md, QUICK_START.txt, & LICENSE
+
+HOW TO INSTALL TO TV:
+--------------------------------------------------------------------------------
+Option A: Using ADB over Wi-Fi
+  1. adb connect <TV_IP_ADDRESS>:5555
+  2. adb install -r TVPowerNew.apk
+  3. adb shell am start -n com.gathin.tvpowerhub/.MainActivity
+  4. (Optional one-time permission grant for instant setup without prompts):
+     adb shell pm grant com.gathin.tvpowerhub android.permission.WRITE_SECURE_SETTINGS
+     adb shell appops set com.gathin.tvpowerhub MANAGE_EXTERNAL_STORAGE allow
+
+Option B: Using a USB Pen Drive
+  1. Copy TVPowerNew.apk to any USB thumb drive.
+  2. Plug it into the TV and open your TV's file manager / Media Center.
+  3. Click TVPowerNew.apk to install.
+  4. Launch TV Power Hub from your app list.
+
+HOW TO ACCESS THE WEB REMOTE (SECURE PAIRING):
+--------------------------------------------------------------------------------
+1. Open TV Power Hub on your TV.
+2. Scan the on-screen QR Code with your smartphone camera.
+   The QR code encodes: http://<TV_IP>:8088/#k=<pairing_token>
+3. The phone browser opens the remote and securely pairs immediately.
+4. The pairing token is preserved in your phone's browser storage for seamless access.
+
+USB STORAGE & FILE MANAGER:
+--------------------------------------------------------------------------------
+- Dual-Storage view: [ 📺 TV Storage ] and [ 💾 USB Storage ].
+- Multi-drive support: If multiple USB drives are plugged in, tapping USB Storage
+  cycles through each connected drive.
+- Supported filesystems:
+  * FAT32: Full Read/Write/Delete/Paste. (Note: standard FAT32 limit is 4GB per file).
+  * exFAT: Full Read/Write/Delete/Paste with no 4GB file size limit.
+  * NTFS: Android TV Linux mounts NTFS partitions as Read-Only. Files can be streamed
+    and copied to TV Storage. The UI detects NTFS and informs you safely.
+- Universal Sticky Copy/Paste:
+  Click [ Copy ] on any file -> Navigate anywhere -> Click [ Paste Here ].
+- Storage Speed Benchmark:
+  Click [ Speed ] in the Files toolbar to measure read/write performance.
+
+PERMISSIONS GUIDE:
+--------------------------------------------------------------------------------
+1. Accessibility Service:
+   Go to TV Settings -> Device Preferences -> Accessibility -> TV Power Hub -> Enable.
+   (Provides D-Pad navigation, media control, text typing, and screen power-off).
+2. All Files Access (for secondary USB drives):
+   Go to TV Settings -> Apps -> Special app access -> All files access -> TV Power Hub -> Allow.
+
+HOW TO REBUILD FROM SOURCE:
+--------------------------------------------------------------------------------
+Requires Android SDK build-tools (version 30+) and JDK 8+.
+Run:
+  powershell -ExecutionPolicy Bypass -File build_apk.ps1
+================================================================================

@@ -1,0 +1,159 @@
+/* TV Power House – PREMIUM LAYER for the phone web remote.
+ * Load AFTER css/app.css:   <link rel="stylesheet" href="css/premium.css">
+ * Purely additive (overrides only). Delete this file and the app returns to the old look.
+ * Every value comes from css/tokens.css – no new colours are invented here except the 3 glow rgba() below.
+ */
+
+/* ---------- 0. Global polish ---------- */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-feature-settings: "tnum" 1, "cv11" 1;          /* steady digits for ms / MB / time */
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(520px 360px at 50% -80px, rgba(255,107,61,.10), transparent 70%),
+    var(--bg);
+}
+::selection { background: rgba(255,107,61,.35); }
+* { -webkit-tap-highlight-color: transparent; }
+
+/* ---------- 1. Header (glass) ---------- */
+.status-bar {
+  background: linear-gradient(180deg, rgba(23,24,27,.92), rgba(23,24,27,.72));
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  backdrop-filter: saturate(140%) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.tv-app-logo { border-radius: 12px; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 6px 18px -6px rgba(255,107,61,.5); }
+.tv-name { letter-spacing: -.01em; }
+.tv-info-text { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .01em; }
+
+/* ---------- 2. D-pad: sculpted, glowing OK ---------- */
+.dpad { filter: drop-shadow(0 18px 28px rgba(0,0,0,.55)) drop-shadow(0 0 0.5px rgba(255,255,255,.25)); }
+.dpad .seg {
+  fill: url(#dpadGrad, var(--surface-2));
+  fill: var(--surface-2);
+  stroke: var(--bg); stroke-width: 5px;
+  filter: brightness(1.06);
+}
+.dpad .seg:active, .dpad .seg.is-down { fill: #2F333B; filter: brightness(1.25); transform: scale(.982); }
+.dpad .seg-icon { stroke: var(--text-2); stroke-width: 2.75; transition: stroke var(--t-fast) var(--ease); }
+.dpad .seg:active + .seg-icon, .dpad .seg.is-down + .seg-icon { stroke: var(--text); }
+.dpad .ok {
+  filter: drop-shadow(0 0 14px rgba(255,107,61,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.5));
+}
+.dpad .ok:active, .dpad .ok.is-down { filter: drop-shadow(0 0 6px rgba(255,107,61,.4)); }
+.dpad .ok-label { letter-spacing: .02em; }
+
+/* ---------- 3. Buttons: one consistent tactile language ---------- */
+.btn-tactile {
+  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 8px 18px -10px rgba(0,0,0,.8);
+  min-height: 48px;                                   /* 48px = minimum comfortable touch target */
+}
+.btn-tactile:active, .btn-tactile.is-down {
+  background: var(--surface-2);
+  box-shadow: 0 2px 6px rgba(0,0,0,.6) inset;
+  transform: scale(.965);
+}
+.vol-rocker {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 14px 24px -14px rgba(0,0,0,.9);
+}
+.vol-btn:active, .vol-btn.is-down { background: rgba(255,107,61,.16); color: var(--accent); }
+.vol-mid .vol-label { letter-spacing: .14em; font-weight: 800; }
+
+/* Primary action buttons (Send Alert, Save, Ask AI, Clean now, Restart) */
+.btn-tool-accent {
+  background: linear-gradient(180deg, #FF7C52, var(--accent));
+  color: var(--accent-ink);
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 22px -10px rgba(255,107,61,.6);
+  font-weight: 800;
+}
+.btn-tool-accent:active { background: var(--accent-press); transform: scale(.97); box-shadow: 0 2px 6px rgba(0,0,0,.35) inset; }
+
+/* ---------- 4. Segmented control (Buttons | Swipe) ---------- */
+.seg-toggle, .dpad-mode, [role="tablist"].pill-tabs {
+  background: var(--surface-1); border: 1px solid var(--line); border-radius: 999px; padding: 3px;
+}
+
+/* ---------- 5. Cards ---------- */
+.section-card, .dash-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0) 60%), var(--surface-1);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 18px 30px -22px rgba(0,0,0,.9);
+}
+.card-title { letter-spacing: -.005em; }
+.card-title .icon { color: var(--accent); }
+.dash-label { text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; font-weight: 700; color: var(--text-3); }
+.dash-value { font-weight: 700; }
+.dash-mono, .dash-value.dash-mono { font-family: var(--font-mono); }
+.dash-bar-wrap { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.dash-bar-fill { border-radius: 99px; transition: width 600ms var(--ease); }
+
+/* Presets (EQ / display) */
+.btn-preset { border: 1px solid var(--line); background: var(--surface-2); border-radius: var(--radius-sm); min-height: 56px; }
+.btn-preset.active {
+  border-color: rgba(255,107,61,.7);
+  background: linear-gradient(180deg, rgba(255,107,61,.16), rgba(255,107,61,.06));
+  box-shadow: 0 0 0 3px rgba(255,107,61,.12);
+}
+
+/* FIX: sleep-timer active chip had orange text on orange fill (unreadable "Off") */
+.btn-timer { min-height: 44px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; font-weight: 700; }
+.btn-timer.active { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: 0 8px 18px -8px rgba(255,107,61,.6); }
+.btn-timer.active * { color: var(--accent-ink); }
+
+/* FIX: Screen tab action buttons – equal height, icon+label on ONE line, no stray white fill */
+.screen-actions-bar { display: flex; flex-wrap: nowrap; gap: 10px; }
+.screen-actions-bar > .btn-screen-action { flex: 1 1 0; min-width: 0; }
+.btn-screen-action {
+  min-height: 52px; padding: 0 12px; white-space: nowrap; font-weight: 700; font-size: 14px;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 16px;
+}
+.btn-screen-action.btn-capture-hero { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: 0 12px 22px -10px rgba(255,107,61,.6); }
+.btn-screen-action:active { transform: scale(.97); }
+
+/* ---------- 6. Inputs ---------- */
+input[type="text"], input[type="url"], input[type="password"], textarea, select, .link-text-input {
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--line); border-radius: 14px;
+  transition: border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: rgba(255,107,61,.8); box-shadow: 0 0 0 4px rgba(255,107,61,.16);
+}
+input::placeholder, textarea::placeholder { color: var(--text-3); }
+
+/* ---------- 7. Bottom tab bar ---------- */
+.bottom-tabs {
+  background: linear-gradient(180deg, rgba(23,24,27,.78), rgba(16,17,19,.96));
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.tab-item { transition: color var(--t-base) var(--ease), transform var(--t-fast) var(--ease); }
+.tab-item:active { transform: scale(.94); }
+.tab-item.active .icon { filter: drop-shadow(0 0 8px rgba(255,107,61,.6)); }
+.tab-dot { width: 18px; height: 3px; border-radius: 3px; bottom: calc(4px + env(safe-area-inset-bottom)); box-shadow: 0 0 10px rgba(255,107,61,.8); }
+
+/* ---------- 8. Toast: icon + 3 variants ---------- */
+.toast {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px 12px 14px; border-radius: 16px;
+  background: rgba(30,32,36,.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--line); box-shadow: 0 18px 40px -12px rgba(0,0,0,.8);
+  font-size: 13.5px; font-weight: 700; max-width: min(92vw, 380px); pointer-events: none;
+}
+.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(255,107,61,.2); flex: none; }
+.toast.ok::before     { background: var(--ok);     box-shadow: 0 0 0 4px rgba(76,211,154,.2); }
+.toast.error::before  { background: var(--danger); box-shadow: 0 0 0 4px rgba(255,90,95,.2); }
+
+/* ---------- 9. Connection chip + skeletons ---------- */
+.skeleton { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 12px; }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.07) 50%, transparent 70%); animation: sk 1.4s infinite; }
+@keyframes sk { to { transform: translateX(100%); } }
+
+/* ---------- 10. Reduced motion / light theme safety ---------- */
+@media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
+:root[data-theme="light"] .status-bar, :root[data-theme="light"] .bottom-tabs { background: rgba(247,245,241,.9); }

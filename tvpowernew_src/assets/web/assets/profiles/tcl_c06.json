@@ -1,0 +1,43 @@
+{
+  "id": "tcl_c06",
+  "name": "TCL BeyondTV / C06 Smart TV",
+  "match": {
+    "manufacturer": "(?i)TCL",
+    "model": "(?i).*Smart[ _]TV.*|.*BeyondTV.*|.*C06.*"
+  },
+  "sourceMenu": [
+    {
+      "type": "service",
+      "action": "com.tcl.insrc.SHOW_WINDOW",
+      "component": "com.tcl.tv/com.tcl.sourcemenu.insrc.ShowWindowService",
+      "description": "TCL Hardware Source Overlay Service"
+    },
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Fallback KEYCODE_TV_INPUT"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "KEYCODE_SLEEP (Soft Screen Off - leaves Wi-Fi and server active)"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "KEYCODE_WAKEUP"
+    }
+  ],
+  "quirks": {
+    "videoLayerBlackInScreenshot": true,
+    "soc": "Realtek RTD2851 / mt5867",
+    "homePackages": [
+      "com.tcl.launcher",
+      "com.google.android.tvlauncher"
+    ]
+  }
+}

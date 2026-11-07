@@ -1,0 +1,33 @@
+{
+  "id": "generic_android_tv",
+  "name": "Generic Android TV / Google TV",
+  "match": {
+    "manufacturer": ".*",
+    "model": ".*"
+  },
+  "sourceMenu": [
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Standard KEYCODE_TV_INPUT"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "Standard KEYCODE_SLEEP"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "Standard KEYCODE_WAKEUP"
+    }
+  ],
+  "quirks": {
+    "videoLayerBlackInScreenshot": false,
+    "requiresLeanbackLauncher": true
+  }
+}

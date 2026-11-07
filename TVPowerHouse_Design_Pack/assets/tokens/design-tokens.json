@@ -1,0 +1,21 @@
+{
+  "name": "TV Power House",
+  "brand": { "name": "TV Power House", "logo": "assets/brand/logo_2048.png", "personality": "calm, premium, instant; dark cinema-room UI with one confident orange accent" },
+  "color": {
+    "bg": "#0B0C0E", "surface1": "#17181B", "surface2": "#1E2024", "surface3": "#272A30",
+    "line": "rgba(255,255,255,0.08)", "text": "#F2F1EE", "text2": "#A5A7AD", "text3": "#6F7279",
+    "accent": "#FF6B3D", "accentPress": "#E85A2D", "accentInk": "#1A0B05",
+    "ok": "#4CD39A", "warn": "#F5B544", "danger": "#FF5A5F",
+    "qr": { "ink": "#14110F", "paper": "#FAF8F4", "eye": "#E0501A" }
+  },
+  "radius": { "sm": 14, "md": 20, "lg": 28, "tvCard": 36, "pill": 999 },
+  "spacing": [4, 8, 12, 16, 20, 24, 32, 40, 48],
+  "motion": { "fastMs": 90, "baseMs": 160, "slowMs": 260, "easing": "cubic-bezier(0.2,0.8,0.2,1)", "sheet": "cubic-bezier(0.32,0.72,0,1)" },
+  "typography": {
+    "ui": "Manrope (600/700/800)  — fallback system-ui",
+    "mono": "JetBrains Mono (500) — for URLs, IPs, numbers",
+    "phone": { "title": "17/700", "body": "14/600", "caption": "11.5/600", "label": "10.5/700 uppercase +0.08em" },
+    "tv": { "appName": "38sp/800 -0.02em", "status": "20sp/700", "url": "26sp/500 mono", "button": "20sp/700" }
+  },
+  "tv": { "canvasDp": "960x540", "overscanSafePaddingDp": { "horizontal": 72, "vertical": 40 }, "qrCardDp": 324, "minQrModulePx": 8 }
+}

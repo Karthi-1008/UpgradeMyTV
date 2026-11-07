@@ -37,6 +37,8 @@ power.txt
 # Root temporary screenshots (Canonical documentation screenshots are in docs/screenshots/)
 /*.png
 !docs/screenshots/*.png
+staging_zip/
+temp_dex/
 
 # OS & Editor files
 .DS_Store

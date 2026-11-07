@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "brand_model_profile",
+  "name": "Brand and Model Display Name (e.g. Sony Bravia 4K TV)",
+  "match": {
+    "manufacturer": "(?i)ManufacturerName",
+    "model": "(?i).*ModelRegex.*"
+  },
+  "sourceMenu": [
+    {
+      "type": "service",
+      "action": "com.vendor.insrc.SHOW_WINDOW",
+      "component": "com.vendor.tv/com.vendor.sourcemenu.ShowWindowService",
+      "description": "Vendor-specific Hardware Input Overlay Service (Priority 1)"
+    },
+    {
+      "type": "activity",
+      "action": "android.intent.action.MAIN",
+      "component": "com.vendor.inputs/.InputActivity",
+      "description": "Vendor Input Activity (Priority 2)"
+    },
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Standard Android KEYCODE_TV_INPUT (Fallback)"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "KEYCODE_SLEEP (Soft Screen-Off keeping Wi-Fi, CPU & server awake)"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "KEYCODE_WAKEUP (Instant screen turn-on)"
+    }
+  ],
+  "quirks": {
+    "soc": "SoC Family (e.g. Realtek RTD2851, Amlogic T972, MediaTek MT9638)",
+    "videoLayerBlackInScreenshot": true,
+    "requiresLeanbackLauncher": true,
+    "braviaSync": false,
+    "homePackages": [
+      "com.vendor.tvlauncher",
+      "com.google.android.tvlauncher"
+    ]
+  }
+}

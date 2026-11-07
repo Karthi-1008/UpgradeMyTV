@@ -1,0 +1,99 @@
+/* Design Tokens - Shared by Web Remote & TV Interface (README 3 §2, §6.3) */
+:root {
+  color-scheme: dark light;
+  --bg: #101113;
+  --surface-1: #17181B;
+  --surface-2: #1E2024;
+  --surface-3: #272A30;
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #F2F1EE;
+  --text-2: #A5A7AD;
+  --text-3: #6F7279;
+  --accent: #FF6B3D;
+  --accent-press: #E85A2D;
+  --accent-ink: #1A0B05;
+  --ok: #4CD39A;
+  --warn: #F5B544;
+  --danger: #FF5A5F;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 14px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --t-fast: 90ms;
+  --t-base: 160ms;
+  --t-slow: 260ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --font-ui: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Tamil', 'Noto Sans Devanagari', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --shadow-up: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 20px -8px rgba(0, 0, 0, 0.6);
+  --shadow-down: 0 2px 6px rgba(0, 0, 0, 0.55) inset;
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EFEDE8;
+    --surface-1: #F7F5F1;
+    --surface-2: #FFFFFF;
+    --surface-3: #E6E3DC;
+    --line: rgba(0, 0, 0, 0.08);
+    --text: #17181B;
+    --text-2: #5A5D64;
+    --text-3: #8C8F96;
+    --accent: #E8531F;
+    --accent-press: #C9461A;
+    --accent-ink: #FFFFFF;
+    --ok: #1E9E6A;
+    --warn: #B77A0B;
+    --danger: #D6343A;
+    --shadow-up: 0 1px 0 #fff inset, 0 8px 18px -10px rgba(30, 25, 15, 0.35);
+    --shadow-down: 0 2px 5px rgba(0, 0, 0, 0.15) inset;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #EFEDE8;
+  --surface-1: #F7F5F1;
+  --surface-2: #FFFFFF;
+  --surface-3: #E6E3DC;
+  --line: rgba(0, 0, 0, 0.08);
+  --text: #17181B;
+  --text-2: #5A5D64;
+  --text-3: #8C8F96;
+  --accent: #E8531F;
+  --accent-press: #C9461A;
+  --accent-ink: #FFFFFF;
+  --ok: #1E9E6A;
+  --warn: #B77A0B;
+  --danger: #D6343A;
+  --shadow-up: 0 1px 0 #fff inset, 0 8px 18px -10px rgba(30, 25, 15, 0.35);
+  --shadow-down: 0 2px 5px rgba(0, 0, 0, 0.15) inset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

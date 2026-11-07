@@ -1,0 +1,35 @@
+{
+  "id": "xiaomi_patchwall",
+  "name": "Xiaomi Mi TV / PatchWall",
+  "match": {
+    "manufacturer": "(?i)Xiaomi",
+    "model": "(?i).*Mi.*TV.*|.*MIBOX.*"
+  },
+  "sourceMenu": [
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Standard KEYCODE_TV_INPUT"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "Standard KEYCODE_SLEEP"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "Standard KEYCODE_WAKEUP"
+    }
+  ],
+  "quirks": {
+    "homePackages": [
+      "com.mitv.tvhome",
+      "com.google.android.tvlauncher"
+    ]
+  }
+}

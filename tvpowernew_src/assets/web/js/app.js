@@ -1,6 +1,27 @@
 // TV Remote Application Logic
 (function() {
-  const API_KEY = new URLSearchParams(window.location.search).get('key') || "TV_POWER_SECURE_KEY";
+  function resolveApiKey() {
+    try {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#k=')) {
+        const token = hash.substring(3).trim();
+        if (token) {
+          localStorage.setItem('tv_pairing_key', token);
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+          return token;
+        }
+      }
+      const params = new URLSearchParams(window.location.search);
+      const urlKey = params.get('key');
+      if (urlKey) {
+        localStorage.setItem('tv_pairing_key', urlKey);
+        return urlKey;
+      }
+    } catch (ignored) {}
+    return localStorage.getItem('tv_pairing_key') || "TV_POWER_SECURE_KEY";
+  }
+
+  let API_KEY = resolveApiKey();
   const ENDPOINT = "/cgi-bin/api";
 
   // Application State
@@ -57,21 +78,37 @@
     el.btnSaveScreen = document.getElementById('btnSaveScreen');
     el.btnViewScreen = document.getElementById('btnViewScreen');
     
-    // Files elements
-    el.storageTabsWrap = document.getElementById('storageTabsWrap');
+    // Files elements (2 Main Storage Options: TV & USB)
     el.btnStorageTv = document.getElementById('btnStorageTv');
+    el.btnStorageUsb = document.getElementById('btnStorageUsb');
+    el.tvStorageSub = document.getElementById('tvStorageSub');
+    el.usbStorageSub = document.getElementById('usbStorageSub');
+    el.pasteBanner = document.getElementById('pasteBanner');
+    el.pasteItemName = document.getElementById('pasteItemName');
+    el.pasteItemSize = document.getElementById('pasteItemSize');
+    el.btnPasteAction = document.getElementById('btnPasteAction');
+    el.btnCancelPaste = document.getElementById('btnCancelPaste');
+    el.readOnlyNotice = document.getElementById('readOnlyNotice');
     el.btnFolderUp = document.getElementById('btnFolderUp');
     el.currentPathText = document.getElementById('currentPathText');
+    el.btnUploadCurrent = document.getElementById('btnUploadCurrent');
     el.btnRefreshFiles = document.getElementById('btnRefreshFiles');
     el.uploadProgressWrap = document.getElementById('uploadProgressWrap');
     el.uploadStatusText = document.getElementById('uploadStatusText');
     el.uploadPercentText = document.getElementById('uploadPercentText');
     el.uploadProgressBar = document.getElementById('uploadProgressBar');
-    el.btnTriggerUpload = document.getElementById('btnTriggerUpload');
-    el.btnPasteFile = document.getElementById('btnPasteFile');
-    el.pasteActionText = document.getElementById('pasteActionText');
     el.fileUploadInput = document.getElementById('fileUploadInput');
     el.fileListWrap = document.getElementById('fileListWrap');
+    el.mediaModal = document.getElementById('mediaModal');
+    el.mediaModalTitle = document.getElementById('mediaModalTitle');
+    el.btnCloseMediaModal = document.getElementById('btnCloseMediaModal');
+    el.mediaVideoPlayer = document.getElementById('mediaVideoPlayer');
+    el.mediaAudioPlayer = document.getElementById('mediaAudioPlayer');
+    el.mediaImageViewer = document.getElementById('mediaImageViewer');
+    el.videoAdjustBar = document.getElementById('videoAdjustBar');
+    el.btnVideoSpeed = document.getElementById('btnVideoSpeed');
+    el.btnVideoFit = document.getElementById('btnVideoFit');
+    el.btnVideoFullscreen = document.getElementById('btnVideoFullscreen');
 
     // Tools elements
     el.linkUrlInput = document.getElementById('linkUrlInput');
@@ -92,6 +129,40 @@
     el.dashUsb = document.getElementById('dashUsb');
     el.dashUptime = document.getElementById('dashUptime');
     el.dashFocus = document.getElementById('dashFocus');
+
+    // V2: Groq AI elements
+    el.groqApiKeyInput = document.getElementById('groqApiKeyInput');
+    el.btnSaveGroqKey = document.getElementById('btnSaveGroqKey');
+    el.aiKeyStatusPill = document.getElementById('aiKeyStatusPill');
+    el.aiCategoryChips = document.getElementById('aiCategoryChips');
+    el.aiLanguageSelect = document.getElementById('aiLanguageSelect');
+    el.aiGenreSelect = document.getElementById('aiGenreSelect');
+    el.aiMoodInput = document.getElementById('aiMoodInput');
+    el.btnGetAiRecs = document.getElementById('btnGetAiRecs');
+    el.aiRecsContainer = document.getElementById('aiRecsContainer');
+    el.aiSummarizerSwitch = document.getElementById('aiSummarizerSwitch');
+
+    // V2: Audio EQ & Display elements
+    el.btnAudioDialogue = document.getElementById('btnAudioDialogue');
+    el.btnAudioNight = document.getElementById('btnAudioNight');
+    el.btnAudioMusic = document.getElementById('btnAudioMusic');
+    el.btnAudioFlat = document.getElementById('btnAudioFlat');
+    el.btnPicCinema = document.getElementById('btnPicCinema');
+    el.btnPicSports = document.getElementById('btnPicSports');
+    el.btnPicGame = document.getElementById('btnPicGame');
+    el.btnPicStd = document.getElementById('btnPicStd');
+
+    // V2: Notification Relay elements
+    el.customAlertInput = document.getElementById('customAlertInput');
+    el.btnSendCustomAlert = document.getElementById('btnSendCustomAlert');
+    el.btnAlertCall = document.getElementById('btnAlertCall');
+    el.btnAlertBattery = document.getElementById('btnAlertBattery');
+    el.btnAlertMsg = document.getElementById('btnAlertMsg');
+    el.autoBatteryAlertSwitch = document.getElementById('autoBatteryAlertSwitch');
+
+
+    // V2: Automations elements
+    el.sleepTimerBtnsGroup = document.getElementById('sleepTimerBtnsGroup');
 
     // Settings elements
     el.themeSelect = document.getElementById('themeSelect');
@@ -125,8 +196,63 @@
     setTimeout(() => targetEl.classList.remove('shake'), 260);
   }
 
+// WebSocket Ultra-Low-Latency Remote Channel (A2)
+  let ws = null;
+  let wsReady = false;
+  let wsReqId = 1;
+  const wsPendingAcks = new Map();
+
+  function initWebSocket() {
+    try {
+      const loc = window.location;
+      const wsProto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = ${wsProto}///ws?key=;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        wsReady = true;
+        console.log('[WS] Connected to TV Powerhouse WebSocket (< 40ms channel)');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.ack && wsPendingAcks.has(data.ack)) {
+            const cb = wsPendingAcks.get(data.ack);
+            wsPendingAcks.delete(data.ack);
+            cb(data);
+          }
+        } catch (ignored) {}
+      };
+
+      ws.onclose = () => {
+        wsReady = false;
+        setTimeout(initWebSocket, 2500);
+      };
+
+      ws.onerror = () => {
+        wsReady = false;
+      };
+    } catch (e) {
+      wsReady = false;
+    }
+  }
+
   // Unified Send Action
   async function send(action, params = {}, triggerElement = null) {
+    // Ultra-fast path: route keys over WebSocket when connected (< 40ms)
+    if (action === 'key' && wsReady && ws && ws.readyState === WebSocket.OPEN) {
+      if (triggerElement) triggerBlip(triggerElement);
+      const code = parseInt(params.code, 10);
+      const id = ++wsReqId;
+      try {
+        ws.send(JSON.stringify({ t: 'key', c: code, id: id }));
+        return { status: 'ok', via: 'ws', code: code };
+      } catch (wsErr) {
+        // Fall back to HTTP fetch below if send fails
+      }
+    }
+
     const url = new URL(ENDPOINT, window.location.origin);
     url.searchParams.set('action', action);
     url.searchParams.set('key', API_KEY);
@@ -135,16 +261,25 @@
     }
 
     try {
-      const res = await fetch(url.toString(), { cache: 'no-store' });
+      const res = await fetch(url.toString(), {
+        cache: 'no-store',
+        headers: {
+          'X-TVHub-Key': API_KEY
+        }
+      });
       if (res.ok) {
         if (triggerElement) triggerBlip(triggerElement);
         return await res.json();
       } else {
-        throw new Error('HTTP ' + res.status);
+        const errJson = await res.json().catch(() => null);
+        const errMsg = errJson?.message || ('Server error ' + res.status);
+        throw new Error(errMsg);
       }
     } catch (err) {
       if (triggerElement) triggerShake(triggerElement);
-      updateConnectionStatus(false, null, "Couldn't reach TV — retrying");
+      if (err.name === 'TypeError' || err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+        updateConnectionStatus(false, null, "Couldn't reach TV — retrying");
+      }
       throw err;
     }
   }
@@ -234,22 +369,17 @@
       OK: 23
     };
 
-    // Segments hold-repeat & tap (Single trigger on press, repeat on hold)
+    // Segments hold-repeat
     ['UP', 'DOWN', 'LEFT', 'RIGHT'].forEach(dir => {
       const seg = el.dpadSvg?.querySelector(`[data-key="${dir}"]`);
       if (seg) {
         holdRepeat(seg, () => {
           send('key', { code: keyMap[dir] }, seg);
-        }, { delay: 350, every: 110 });
-        // Prevent synthetic click from double-firing
-        seg.addEventListener('click', e => {
-          e.preventDefault();
-          e.stopPropagation();
-        });
+        }, { delay: 350, every: 90 });
       }
     });
 
-    // OK button (Single trigger on press, prevent click double-firing)
+    // OK button
     const okBtn = el.dpadSvg?.querySelector('[data-key="OK"]');
     if (okBtn) {
       okBtn.addEventListener('pointerdown', e => {
@@ -257,10 +387,6 @@
         okBtn.classList.add('is-down');
         window.Haptics?.ok();
         send('key', { code: keyMap.OK }, okBtn);
-      });
-      okBtn.addEventListener('click', e => {
-        e.preventDefault();
-        e.stopPropagation();
       });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => {
         okBtn.addEventListener(ev, () => okBtn.classList.remove('is-down'));
@@ -373,7 +499,7 @@
       send('key', { code: 164 }, el.btnMute);
     });
 
-    // Transport (Play/Pause, Rewind, Fast Forward)
+    // Transport (Play/Pause, Rewind, Fast Forward - F-08 button ID fix)
     const btnPlayPause = document.getElementById('btnPlayPause');
     const btnRewind = document.getElementById('btnSkipBack') || document.getElementById('btnRewind');
     const btnFastForward = document.getElementById('btnSkipFwd') || document.getElementById('btnFastForward');
@@ -412,24 +538,22 @@
 
     // More Controls items
     document.getElementById('sheetBtnInput')?.addEventListener('click', () => {
-      closeSheets();
-      send('input_source', { source: 'native' });
+      send('key', { code: 178 });
       window.Haptics?.tap();
-      showToast('Opened input source menu');
+      closeSheets();
+      showToast('Input Source');
     });
-
     document.getElementById('sheetBtnSettings')?.addEventListener('click', () => {
       send('key', { code: 176 });
       window.Haptics?.tap();
       closeSheets();
       showToast('TV Settings');
     });
-
     document.getElementById('sheetBtnScreenOff')?.addEventListener('click', () => {
-      send('key', { code: 26 });
+      send('key', { code: 223 });
       window.Haptics?.tap();
       closeSheets();
-      showToast('Powering off TV');
+      showToast('Screen Off');
     });
 
     // TV Name click opens Settings Sheet
@@ -546,34 +670,33 @@
       el.typeInput.value = '';
     });
 
-    // Quick Actions
-    const btnBackspace = document.getElementById('btnAccBackspace') || document.getElementById('btnTypeBackspace');
-    btnBackspace?.addEventListener('click', () => {
+    // Quick Actions (F-08 button ID fix)
+    const btnBS = document.getElementById('btnAccBackspace') || document.getElementById('btnTypeBackspace');
+    const btnEnt = document.getElementById('btnAccEnter') || document.getElementById('btnTypeEnter');
+    const btnClr = document.getElementById('btnAccClear') || document.getElementById('btnTypeClear');
+    const btnPst = document.getElementById('btnAccPaste') || document.getElementById('btnTypePaste');
+
+    btnBS?.addEventListener('click', () => {
       window.Haptics?.tap();
       send('key', { code: 67 });
     });
 
-    const btnEnter = document.getElementById('btnAccEnter') || document.getElementById('btnTypeEnter');
-    btnEnter?.addEventListener('click', () => {
+    btnEnt?.addEventListener('click', () => {
       window.Haptics?.ok();
       send('key', { code: 66 });
     });
 
-    const btnClear = document.getElementById('btnAccClear') || document.getElementById('btnTypeClear');
-    btnClear?.addEventListener('click', () => {
+    btnClr?.addEventListener('click', () => {
       window.Haptics?.tap();
-      if (el.typeInput) {
-        el.typeInput.value = '';
-        el.typeInput.focus();
-      }
+      el.typeInput.value = '';
+      el.typeInput.focus();
     });
 
-    const btnPaste = document.getElementById('btnAccPaste') || document.getElementById('btnTypePaste');
-    btnPaste?.addEventListener('click', async () => {
+    btnPst?.addEventListener('click', async () => {
       window.Haptics?.tap();
       try {
         const text = await navigator.clipboard.readText();
-        if (text && el.typeInput) {
+        if (text) {
           el.typeInput.value = text;
           if (state.liveTyping) {
             await sendTextToTv(text);
@@ -658,8 +781,40 @@
     try {
       const data = await send('screenshot');
       if (data && data.url) {
-        const fullUrl = data.url.startsWith('/') ? data.url : '/' + data.url;
-        el.screenImg.src = fullUrl;
+        let fullUrl = data.url.startsWith('/') ? data.url : '/' + data.url;
+        if (!fullUrl.includes('key=')) {
+          fullUrl += (fullUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(API_KEY);
+        }
+
+        // Fetch via blob for reliable authentication and immediate display
+        try {
+          const resp = await fetch(fullUrl, {
+            headers: { 'X-TVHub-Key': API_KEY },
+            cache: 'no-store'
+          });
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const objUrl = URL.createObjectURL(blob);
+            el.screenImg.onload = () => {
+              el.screenShimmer?.classList.remove('active');
+              if (el.screenEmpty) el.screenEmpty.style.display = 'none';
+              el.screenImg.classList.add('loaded');
+              if (el.btnSaveScreen) el.btnSaveScreen.style.display = 'inline-flex';
+              if (el.btnViewScreen) el.btnViewScreen.style.display = 'inline-flex';
+              showToast('Screen captured');
+            };
+            el.screenImg.onerror = () => {
+              el.screenShimmer?.classList.remove('active');
+              showToast('Failed to display screen capture');
+            };
+            el.screenImg.src = objUrl;
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn('Screenshot blob fetch fallback:', fetchErr);
+        }
+
+        // Fallback to direct image src
         el.screenImg.onload = () => {
           el.screenShimmer?.classList.remove('active');
           if (el.screenEmpty) el.screenEmpty.style.display = 'none';
@@ -668,6 +823,14 @@
           if (el.btnViewScreen) el.btnViewScreen.style.display = 'inline-flex';
           showToast('Screen captured');
         };
+        el.screenImg.onerror = () => {
+          el.screenShimmer?.classList.remove('active');
+          showToast('Failed to load screen capture');
+        };
+        el.screenImg.src = fullUrl;
+      } else {
+        el.screenShimmer?.classList.remove('active');
+        showToast(data?.message || 'Screenshot failed');
       }
     } catch (err) {
       el.screenShimmer?.classList.remove('active');
@@ -687,74 +850,233 @@
     return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   }
 
+  // =========================================
+  // Files Tab Setup (Universal 2-Storage: TV Storage & USB Storage)
+  // =========================================
+  state.tvRoot = '/storage/emulated/0/Download';
+  state.usbRoot = '';
+  state.clipboard = null;
+  state.currentDrives = [];
+  let videoSpeedIdx = 1;
+  const videoSpeeds = [0.75, 1.0, 1.25, 1.5, 2.0];
+  let isVideoFitCover = false;
+
   function setupFilesTab() {
-    // TV Storage Tab
+    // 1. TV Storage Toggle Button
     el.btnStorageTv?.addEventListener('click', () => {
       window.Haptics?.tap();
-      setActiveStorageTab(el.btnStorageTv);
-      loadDirectory('/storage/emulated/0/Download');
+      setStorageActive('tv');
+      loadDirectory(state.tvRoot);
     });
 
-    // Parent Folder (Up)
+    // 2. USB Storage Toggle Button (Handles multiple USB drives)
+    let usbDriveIndex = 0;
+    el.btnStorageUsb?.addEventListener('click', () => {
+      window.Haptics?.tap();
+      if (!state.currentDrives || state.currentDrives.length === 0) {
+        showToast('No USB drive detected on TV. Insert a flash drive.');
+        return;
+      }
+      setStorageActive('usb');
+      if (state.currentDrives.length > 1 && isCurrentPathUsb()) {
+        usbDriveIndex = (usbDriveIndex + 1) % state.currentDrives.length;
+      } else {
+        usbDriveIndex = 0;
+      }
+      const targetDrive = state.currentDrives[usbDriveIndex] || state.currentDrives[0];
+      state.usbRoot = targetDrive.path;
+      loadDirectory(targetDrive.path);
+    });
+
+    // 3. Parent Folder (Up)
     el.btnFolderUp?.addEventListener('click', () => {
       window.Haptics?.tap();
-      const cur = state.currentPath.replace(/\/+$/, '');
-      if (cur === '/storage' || cur === '') return;
+      const cur = (state.currentPath || '').replace(/\/+$/, '');
+      if (cur === '/storage' || cur === '' || cur === '/storage/emulated/0') return;
+      if (state.usbRoot && cur === state.usbRoot) return; // Do not go above USB root
       const parent = cur.substring(0, cur.lastIndexOf('/')) || '/storage';
       loadDirectory(parent);
     });
 
-    // Refresh Files
+    // 4. Refresh Current Directory
     el.btnRefreshFiles?.addEventListener('click', () => {
       window.Haptics?.tap();
-      loadDirectory(state.currentPath);
+      loadDirectory(state.currentPath || state.tvRoot);
     });
 
-    // Trigger Upload Button -> file picker
-    el.btnTriggerUpload?.addEventListener('click', () => {
+    // 4b. Storage Speed Benchmark (F-30)
+    const btnBench = document.getElementById('btnBenchmarkStorage');
+    btnBench?.addEventListener('click', async () => {
       window.Haptics?.tap();
+      const targetDir = state.currentPath || state.tvRoot;
+      showToast('⚡ Running storage speed benchmark… (please wait 3s)');
+      btnBench.disabled = true;
+      try {
+        const res = await send('usb_benchmark', { path: targetDir });
+        if (res && res.status === 'ok') {
+          const wStr = res.write_speed_mbps != null ? `${res.write_speed_mbps} MB/s` : (res.write_status === 'read_only' ? 'Read-Only (No Write)' : 'N/A');
+          const rStr = res.read_speed_mbps != null ? `${res.read_speed_mbps} MB/s` : 'N/A';
+          alert(`⚡ Storage Benchmark Results\n\n📁 Path: ${res.path}\nFree Space: ${res.free_str}\n📥 Read Speed: ${rStr}\n📤 Write Speed: ${wStr}\nTotal: ${res.total_str}`);
+        } else {
+          showToast(res.message || 'Benchmark failed');
+        }
+      } catch (err) {
+        showToast(err.message || 'Benchmark error');
+      } finally {
+        btnBench.disabled = false;
+      }
+    });
+
+    // 5. Upload File Button (Uploads directly to whichever directory is currently open)
+    el.btnUploadCurrent?.addEventListener('click', () => {
+      window.Haptics?.tap();
+      const isUsb = isCurrentPathUsb();
+      if (isUsb && isUsbReadOnly()) {
+        const drv = getCurrentDrive();
+        const fs = drv?.fs_type || 'Unknown';
+        if (fs.toUpperCase().includes('NTFS')) {
+          alert('USB Drive is Read-Only (NTFS)\n\nAndroid TV Linux driver mounts NTFS drives as read-only.\nTo upload files to USB, the drive must be formatted as FAT32 or exFAT.\n\nTip: Switch to TV Storage to upload files!');
+        } else {
+          alert(`USB Drive Write Restricted (${fs})\n\nAndroid TV restricted write access to this drive.\nEnsure "All files access" is granted in TV Settings → Apps → TV Power Hub.`);
+        }
+        return;
+      }
       el.fileUploadInput?.click();
     });
 
-    // File selected for upload
     el.fileUploadInput?.addEventListener('change', () => {
       const files = Array.from(el.fileUploadInput.files || []);
       if (files.length > 0) {
-        uploadFilesSequentially(files);
+        const dest = state.currentPath || state.tvRoot;
+        const targetLabel = isCurrentPathUsb() ? 'USB Storage' : 'TV Storage';
+        uploadFilesSequentially(files, dest, targetLabel);
       }
       el.fileUploadInput.value = '';
     });
 
-    // Paste file
-    el.btnPasteFile?.addEventListener('click', async () => {
+    // 6. Sticky Paste Action
+    el.btnPasteAction?.addEventListener('click', async () => {
       if (!state.clipboard) return;
       window.Haptics?.ok();
-      const src = state.clipboard.path;
-      const dest = state.currentPath + '/' + state.clipboard.name;
-      el.btnPasteFile.disabled = true;
+
+      const isUsb = isCurrentPathUsb();
+      if (isUsb && isUsbReadOnly()) {
+        const drv = getCurrentDrive();
+        const fs = drv?.fs_type || 'Unknown';
+        if (fs.toUpperCase().includes('NTFS')) {
+          alert('Cannot Paste to this USB Drive (Read-Only NTFS)\n\nAndroid TV cannot write or paste files onto NTFS drives.\nPlease switch to TV Storage or insert a FAT32/exFAT drive.');
+        } else {
+          alert(`Cannot Paste to this USB Drive (${fs})\n\nAndroid TV restricted write access to this drive.\nPlease verify "All files access" permission in TV Settings.`);
+        }
+        return;
+      }
+
+      const dest = state.currentPath.replace(/\/+$/, '') + '/' + state.clipboard.name;
+      el.btnPasteAction.disabled = true;
+      el.btnPasteAction.textContent = 'Pasting...';
 
       try {
-        const res = await send('copy_file', { src, dest });
-        if (res.status === 'ok') {
-          showToast(`Pasted "${state.clipboard.name}"`);
+        const res = await send('copy_file', { src: state.clipboard.path, dest: dest });
+        if (res && res.status === 'ok') {
+          showToast(`Pasted "${state.clipboard.name}"!`);
           state.clipboard = null;
-          el.btnPasteFile.style.display = 'none';
+          hidePasteBanner();
           loadDirectory(state.currentPath);
         } else {
-          showToast('Paste failed');
+          showToast(res.message || 'Paste failed. Check permissions.');
         }
-      } catch (e) {
-        showToast('Paste failed');
+      } catch (err) {
+        showToast(err.message || 'Paste error: Could not copy file');
       } finally {
-        el.btnPasteFile.disabled = false;
+        if (el.btnPasteAction) {
+          el.btnPasteAction.disabled = false;
+          el.btnPasteAction.innerHTML = '<svg class="icon icon-16"><use href="#i-paste"/></svg><span>Paste Here</span>';
+        }
+      }
+    });
+
+    el.btnCancelPaste?.addEventListener('click', () => {
+      state.clipboard = null;
+      hidePasteBanner();
+      showToast('Copy canceled');
+    });
+
+    // Media Modal Controls
+    el.btnCloseMediaModal?.addEventListener('click', () => closeMediaModal());
+    el.mediaModal?.addEventListener('click', e => {
+      if (e.target === el.mediaModal) closeMediaModal();
+    });
+
+    // Video Speed Adjust
+    el.btnVideoSpeed?.addEventListener('click', () => {
+      videoSpeedIdx = (videoSpeedIdx + 1) % videoSpeeds.length;
+      const speed = videoSpeeds[videoSpeedIdx];
+      if (el.mediaVideoPlayer) el.mediaVideoPlayer.playbackRate = speed;
+      if (el.btnVideoSpeed) el.btnVideoSpeed.textContent = `Speed: ${speed}x`;
+    });
+
+    // Video Fit / Aspect Adjust
+    el.btnVideoFit?.addEventListener('click', () => {
+      isVideoFitCover = !isVideoFitCover;
+      if (el.mediaVideoPlayer) {
+        el.mediaVideoPlayer.style.objectFit = isVideoFitCover ? 'cover' : 'contain';
+      }
+      if (el.btnVideoFit) {
+        el.btnVideoFit.textContent = isVideoFitCover ? 'Fit: Fill' : 'Fit: Contain';
+      }
+    });
+
+    // Video Fullscreen
+    el.btnVideoFullscreen?.addEventListener('click', () => {
+      if (el.mediaVideoPlayer) {
+        if (el.mediaVideoPlayer.requestFullscreen) {
+          el.mediaVideoPlayer.requestFullscreen();
+        } else if (el.mediaVideoPlayer.webkitRequestFullscreen) {
+          el.mediaVideoPlayer.webkitRequestFullscreen();
+        }
       }
     });
   }
 
-  function setActiveStorageTab(activeBtn) {
-    if (!el.storageTabsWrap) return;
-    el.storageTabsWrap.querySelectorAll('.btn-storage-tab').forEach(b => b.classList.remove('active'));
-    activeBtn?.classList.add('active');
+  function setStorageActive(mode) {
+    if (mode === 'tv') {
+      el.btnStorageTv?.classList.add('active');
+      el.btnStorageUsb?.classList.remove('active');
+    } else {
+      el.btnStorageTv?.classList.remove('active');
+      el.btnStorageUsb?.classList.add('active');
+    }
+  }
+
+  function isCurrentPathUsb() {
+    return !((state.currentPath || '').startsWith('/storage/emulated'));
+  }
+
+  function getCurrentDrive() {
+    if (!state.currentDrives || state.currentDrives.length === 0) return null;
+    const cur = state.currentPath || '';
+    return state.currentDrives.find(d => cur.startsWith(d.path)) || state.currentDrives[0];
+  }
+
+  function isUsbReadOnly() {
+    const drv = getCurrentDrive();
+    if (!drv) return false;
+    if (drv.is_writable !== undefined && drv.is_writable !== null) {
+      return !drv.is_writable;
+    }
+    if (drv.fs_type && drv.fs_type.toUpperCase().includes('NTFS')) return true;
+    return false;
+  }
+
+  function showPasteBanner(item) {
+    if (!el.pasteBanner) return;
+    el.pasteBanner.style.display = 'flex';
+    if (el.pasteItemName) el.pasteItemName.textContent = item.name;
+    if (el.pasteItemSize) el.pasteItemSize.textContent = `(${formatFileSize(item.size)})`;
+  }
+
+  function hidePasteBanner() {
+    if (el.pasteBanner) el.pasteBanner.style.display = 'none';
   }
 
   async function loadDirectory(path) {
@@ -764,49 +1086,80 @@
     try {
       const data = await send('list_files', { path: path });
       if (!data || data.status !== 'ok') {
-        el.fileListWrap.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--err); font-size: 13px;">Failed to read folder</div>';
+        el.fileListWrap.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--err); font-size: 13px;">' + (data?.message || 'Failed to read folder') + '</div>';
         return;
       }
 
       state.currentPath = data.path;
-      if (el.currentPathText) el.currentPathText.textContent = data.path;
+      if (el.currentPathText) {
+        el.currentPathText.textContent = data.path;
+        el.currentPathText.title = data.path;
+      }
 
-      // Update storage tabs (TV + any attached USB drives)
-      updateStorageTabs(data.drives || []);
+      // Handle drives detection
+      const drives = data.drives || [];
+      state.currentDrives = drives;
+      if (drives.length > 0) {
+        const curDrive = getCurrentDrive() || drives[0];
+        state.usbRoot = curDrive.path;
+        if (el.usbStorageSub) {
+          const fsLabel = curDrive.fs_type ? ` · ${curDrive.fs_type}` : '';
+          const driveCount = drives.length > 1 ? ` (${drives.length} drives)` : '';
+          el.usbStorageSub.textContent = `${curDrive.free_str || curDrive.name} free${fsLabel}${driveCount}`;
+        }
+      } else {
+        state.usbRoot = '';
+        if (el.usbStorageSub) el.usbStorageSub.textContent = 'No USB detected';
+      }
+
+      // Update Active storage toggle button
+      if (isCurrentPathUsb()) {
+        setStorageActive('usb');
+      } else {
+        setStorageActive('tv');
+      }
+
+      // Show/Hide Read-Only Notice with dynamic message based on actual filesystem
+      if (el.readOnlyNotice) {
+        const isUsb = isCurrentPathUsb();
+        const isRo = isUsb && isUsbReadOnly();
+        el.readOnlyNotice.style.display = isRo ? 'flex' : 'none';
+        if (isRo) {
+          const drv = getCurrentDrive();
+          const fs = drv?.fs_type || 'Unknown';
+          const isNtfs = fs.toUpperCase().includes('NTFS');
+          if (isNtfs) {
+            el.readOnlyNotice.innerHTML = `
+              <svg class="icon icon-16" style="color: var(--warn); flex-shrink: 0;"><use href="#i-lock"/></svg>
+              <div style="flex: 1; font-size: 11px; line-height: 1.35; color: var(--text-2);">
+                <b style="color: var(--warn);">USB Drive is Read-Only (${fs})</b><br/>
+                Android TV mounts NTFS drives as read-only. Files can be streamed and copied to TV Storage. To paste or upload directly to USB, format it as FAT32 or exFAT.
+              </div>
+            `;
+          } else {
+            el.readOnlyNotice.innerHTML = `
+              <svg class="icon icon-16" style="color: var(--warn); flex-shrink: 0;"><use href="#i-lock"/></svg>
+              <div style="flex: 1; font-size: 11px; line-height: 1.35; color: var(--text-2);">
+                <b style="color: var(--warn);">USB Drive Write Restricted (${fs})</b><br/>
+                Android TV restricted write access to this drive. Make sure "All files access" is granted in TV Settings → Apps → TV Power Hub → Permissions.
+              </div>
+            `;
+          }
+        }
+      }
+
+      // Restore paste banner if clipboard has item
+      if (state.clipboard) {
+        showPasteBanner(state.clipboard);
+      } else {
+        hidePasteBanner();
+      }
 
       // Render file & folder rows
       renderFileRows(data.items || []);
 
     } catch (e) {
       el.fileListWrap.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--err); font-size: 13px;">Connection error reading files</div>';
-    }
-  }
-
-  function updateStorageTabs(drives) {
-    if (!el.storageTabsWrap) return;
-    // Remove dynamic USB buttons while keeping TV Internal button
-    const oldUsbBtns = el.storageTabsWrap.querySelectorAll('.btn-usb-drive');
-    oldUsbBtns.forEach(b => b.remove());
-
-    drives.forEach(drv => {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-storage-tab btn-usb-drive';
-      btn.dataset.path = drv.path;
-      btn.innerHTML = `<svg class="icon icon-16"><use href="#i-usb"/></svg><span>${drv.name}</span>`;
-      btn.addEventListener('click', () => {
-        window.Haptics?.tap();
-        setActiveStorageTab(btn);
-        loadDirectory(drv.path);
-      });
-      el.storageTabsWrap.appendChild(btn);
-    });
-
-    // Update active highlight based on current path
-    if (state.currentPath.startsWith('/storage/emulated')) {
-      setActiveStorageTab(el.btnStorageTv);
-    } else {
-      const match = el.storageTabsWrap.querySelector(`.btn-usb-drive[data-path="${state.currentPath}"]`);
-      if (match) setActiveStorageTab(match);
     }
   }
 
@@ -848,7 +1201,7 @@
 
       const size = document.createElement('span');
       size.className = 'file-size';
-      size.textContent = item.is_dir ? 'Folder' : formatFileSize(item.size);
+      size.textContent = item.is_dir ? 'Folder' : (item.size_str || formatFileSize(item.size));
 
       meta.appendChild(title);
       meta.appendChild(size);
@@ -867,8 +1220,49 @@
       // Action Buttons
       const actions = document.createElement('div');
       actions.className = 'file-actions';
+      const filePath = state.currentPath.replace(/\/+$/, '') + '/' + item.name;
 
-      // 1. Download to Phone (files only)
+      // 1. APK Installer on TV
+      if (!item.is_dir && item.is_apk) {
+        const btnInstall = document.createElement('button');
+        btnInstall.className = 'btn btn-file-icon';
+        btnInstall.style.color = 'var(--ok)';
+        btnInstall.title = 'Install APK on TV display';
+        btnInstall.innerHTML = '<svg class="icon icon-16"><use href="#i-check"/></svg>';
+        btnInstall.addEventListener('click', async e => {
+          e.stopPropagation();
+          window.Haptics?.ok();
+          showToast(`Opening installer for "${item.name}" on TV...`);
+          try {
+            const res = await send('install_apk', { path: filePath });
+            if (res.status === 'ok') {
+              showToast('Package installer launched on TV display!');
+            } else {
+              showToast(res.message || 'Install failed');
+            }
+          } catch (err) {
+            showToast('Install error');
+          }
+        });
+        actions.appendChild(btnInstall);
+      }
+
+      // 2. Stream / Preview Media (Videos, Audio, Images)
+      if (!item.is_dir && (item.is_video || item.is_audio || item.is_image)) {
+        const btnStream = document.createElement('button');
+        btnStream.className = 'btn btn-file-icon';
+        btnStream.style.color = 'var(--accent)';
+        btnStream.title = 'Stream / Preview on Phone';
+        btnStream.innerHTML = '<svg class="icon icon-16"><use href="#i-play"/></svg>';
+        btnStream.addEventListener('click', e => {
+          e.stopPropagation();
+          window.Haptics?.tap();
+          openMediaModal(item.name, filePath, item.is_video, item.is_audio, item.is_image);
+        });
+        actions.appendChild(btnStream);
+      }
+
+      // 3. Download to Phone (files only)
       if (!item.is_dir) {
         const btnDownload = document.createElement('button');
         btnDownload.className = 'btn btn-file-icon';
@@ -877,7 +1271,6 @@
         btnDownload.addEventListener('click', e => {
           e.stopPropagation();
           window.Haptics?.tap();
-          const filePath = state.currentPath.replace(/\/+$/, '') + '/' + item.name;
           const downloadUrl = `${ENDPOINT}?action=download_file&path=${encodeURIComponent(filePath)}&key=${API_KEY}`;
           const a = document.createElement('a');
           a.href = downloadUrl;
@@ -890,29 +1283,27 @@
         actions.appendChild(btnDownload);
       }
 
-      // 2. Copy button
-      const btnCopy = document.createElement('button');
-      btnCopy.className = 'btn btn-file-icon';
-      btnCopy.title = 'Copy';
-      btnCopy.innerHTML = '<svg class="icon icon-16"><use href="#i-copy"/></svg>';
-      btnCopy.addEventListener('click', e => {
-        e.stopPropagation();
-        window.Haptics?.tap();
-        state.clipboard = {
-          action: 'copy',
-          path: state.currentPath.replace(/\/+$/, '') + '/' + item.name,
-          name: item.name,
-          is_dir: item.is_dir
-        };
-        if (el.btnPasteFile && el.pasteActionText) {
-          el.pasteActionText.textContent = `Paste "${item.name}"`;
-          el.btnPasteFile.style.display = 'inline-flex';
-        }
-        showToast(`Copied "${item.name}"`);
-      });
-      actions.appendChild(btnCopy);
+      // 4. Universal Copy Button
+      if (!item.is_dir) {
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'btn btn-file-icon';
+        btnCopy.title = 'Copy file';
+        btnCopy.innerHTML = '<svg class="icon icon-16"><use href="#i-copy"/></svg>';
+        btnCopy.addEventListener('click', e => {
+          e.stopPropagation();
+          window.Haptics?.tap();
+          state.clipboard = {
+            name: item.name,
+            path: filePath,
+            size: item.size
+          };
+          showPasteBanner(state.clipboard);
+          showToast(`Copied "${item.name}". Navigate to any folder and tap "Paste Here".`);
+        });
+        actions.appendChild(btnCopy);
+      }
 
-      // 3. Delete button
+      // 5. Universal Delete Button
       const btnDel = document.createElement('button');
       btnDel.className = 'btn btn-file-icon';
       btnDel.title = 'Delete';
@@ -920,16 +1311,21 @@
       btnDel.addEventListener('click', async e => {
         e.stopPropagation();
         window.Haptics?.tap();
-        const itemPath = state.currentPath.replace(/\/+$/, '') + '/' + item.name;
+
+        if (isCurrentPathUsb() && isUsbReadOnly()) {
+          alert('Cannot delete: USB drive is mounted as Read-Only (NTFS).');
+          return;
+        }
+
         if (!confirm(`Permanently delete "${item.name}"?`)) return;
 
         try {
-          const res = await send('delete_file', { path: itemPath });
-          if (res.status === 'ok') {
+          const res = await send('delete_file', { path: filePath });
+          if (res && res.status === 'ok') {
             showToast(`Deleted "${item.name}"`);
             loadDirectory(state.currentPath);
           } else {
-            showToast('Delete failed');
+            showToast(res.message || 'Delete failed');
           }
         } catch (err) {
           showToast('Delete error');
@@ -943,49 +1339,168 @@
     });
   }
 
-  function uploadFilesSequentially(files) {
-    if (files.length === 0) return;
+  function openMediaModal(title, filePath, isVideo, isAudio, isImage) {
+    if (!el.mediaModal) return;
+    if (el.mediaModalTitle) el.mediaModalTitle.textContent = title;
+    const streamUrl = `${ENDPOINT}?action=stream_media&path=${encodeURIComponent(filePath)}&key=${API_KEY}`;
+
+    if (el.mediaVideoPlayer) {
+      el.mediaVideoPlayer.pause();
+      el.mediaVideoPlayer.src = '';
+      el.mediaVideoPlayer.style.display = 'none';
+      el.mediaVideoPlayer.playbackRate = 1.0;
+      el.mediaVideoPlayer.style.objectFit = 'contain';
+    }
+    if (el.mediaAudioPlayer) {
+      el.mediaAudioPlayer.pause();
+      el.mediaAudioPlayer.src = '';
+      el.mediaAudioPlayer.style.display = 'none';
+    }
+    if (el.mediaImageViewer) {
+      el.mediaImageViewer.src = '';
+      el.mediaImageViewer.style.display = 'none';
+    }
+    if (el.videoAdjustBar) {
+      el.videoAdjustBar.style.display = isVideo ? 'flex' : 'none';
+    }
+    if (el.btnVideoSpeed) el.btnVideoSpeed.textContent = 'Speed: 1.0x';
+    if (el.btnVideoFit) el.btnVideoFit.textContent = 'Fit: Contain';
+    videoSpeedIdx = 1;
+    isVideoFitCover = false;
+
+    if (isVideo && el.mediaVideoPlayer) {
+      el.mediaVideoPlayer.src = streamUrl;
+      el.mediaVideoPlayer.style.display = 'block';
+      el.mediaVideoPlayer.play().catch(() => {});
+    } else if (isAudio && el.mediaAudioPlayer) {
+      el.mediaAudioPlayer.src = streamUrl;
+      el.mediaAudioPlayer.style.display = 'block';
+      el.mediaAudioPlayer.play().catch(() => {});
+    } else if (isImage && el.mediaImageViewer) {
+      el.mediaImageViewer.src = streamUrl;
+      el.mediaImageViewer.style.display = 'block';
+    }
+
+    el.mediaModal.style.display = 'flex';
+  }
+
+  function closeMediaModal() {
+    if (!el.mediaModal) return;
+    if (el.mediaVideoPlayer) {
+      el.mediaVideoPlayer.pause();
+      el.mediaVideoPlayer.src = '';
+    }
+    if (el.mediaAudioPlayer) {
+      el.mediaAudioPlayer.pause();
+      el.mediaAudioPlayer.src = '';
+    }
+    if (el.mediaImageViewer) {
+      el.mediaImageViewer.src = '';
+    }
+    if (el.videoAdjustBar) {
+      el.videoAdjustBar.style.display = 'none';
+    }
+    el.mediaModal.style.display = 'none';
+  }
+
+  function uploadFilesSequentially(files, destDir, targetLabel) {
+    if (!files || files.length === 0) return;
+    const dest = destDir || state.currentPath || state.tvRoot;
+    const label = targetLabel || 'Storage';
+
+    const isUsb = isCurrentPathUsb();
+    const drv = getCurrentDrive();
+    const fs = (drv?.fs_type || '').toUpperCase();
+
+    // 1. FAT32 4GB single-file limit architectural check
+    for (const f of files) {
+      if (isUsb && f.size >= 4294967295) {
+        if (!fs.includes('EXFAT') && !fs.includes('EXT')) {
+          alert(`Cannot Upload to FAT32 USB (File > 4 GB)\n\n"${f.name}" is ${formatFileSize(f.size)}.\n\nThis USB drive is formatted as FAT32, which has a strict physical limit of 4 GB (4,096 MB) per individual file.\n\nHow to solve this:\n1. Switch to "TV Storage" above (the TV internal storage supports large 4K movies/files), or\n2. Reformat this USB drive as exFAT on your PC.`);
+          return;
+        }
+      }
+    }
     if (el.uploadProgressWrap) el.uploadProgressWrap.classList.add('show');
+    if (el.uploadProgressBar) el.uploadProgressBar.style.width = '0%';
+    if (el.uploadPercentText) el.uploadPercentText.textContent = '0%';
+    if (el.uploadStatusText) el.uploadStatusText.textContent = `Preparing upload to ${label}…`;
 
     let idx = 0;
+    const successList = [];
+    const failList = [];
+
     function next() {
       if (idx >= files.length) {
         if (el.uploadProgressWrap) el.uploadProgressWrap.classList.remove('show');
-        showToast(`Uploaded ${files.length} file(s) successfully!`);
-        loadDirectory(state.currentPath);
+        if (failList.length === 0 && successList.length > 0) {
+          showToast(`Uploaded ${successList.length} file(s) to ${label}!`);
+          state.currentPath = dest;
+          loadDirectory(dest);
+        } else if (successList.length > 0 && failList.length > 0) {
+          showToast(`${successList.length} uploaded, ${failList.length} failed.`);
+          state.currentPath = dest;
+          loadDirectory(dest);
+        } else {
+          const firstErr = failList[0]?.error || 'Failed to save file';
+          showToast(`Upload failed: ${firstErr}`);
+          alert(`Upload Failed\n\nCould not write file(s) to:\n${dest}\n\nReason: ${firstErr}`);
+        }
         return;
       }
 
       const file = files[idx];
       idx++;
 
-      const dest = state.currentPath;
       const uploadUrl = `${ENDPOINT}?action=upload_file&dest=${encodeURIComponent(dest)}&name=${encodeURIComponent(file.name)}&key=${API_KEY}`;
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', uploadUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      xhr.setRequestHeader('X-TVHub-Key', API_KEY);
+      xhr.timeout = 300000; // 5 minute timeout for large uploads
 
       xhr.upload.onprogress = ev => {
         if (ev.lengthComputable) {
           const pct = Math.round((ev.loaded / ev.total) * 100);
           if (el.uploadProgressBar) el.uploadProgressBar.style.width = pct + '%';
           if (el.uploadPercentText) el.uploadPercentText.textContent = pct + '%';
-          if (el.uploadStatusText) el.uploadStatusText.textContent = `Uploading "${file.name}" (${pct}%)`;
+          if (el.uploadStatusText) el.uploadStatusText.textContent = `[${idx}/${files.length}] Uploading "${file.name}" (${pct}%)`;
         }
       };
 
       xhr.onload = () => {
-        if (xhr.status === 200) {
-          next();
-        } else {
-          showToast(`Upload failed for ${file.name}`);
-          next();
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (xhr.status === 200 && res.status === 'ok') {
+            successList.push({ name: file.name, path: res.path, size: res.size });
+          } else {
+            failList.push({ name: file.name, error: res.message || ('Server error ' + xhr.status) });
+          }
+        } catch (e) {
+          if (xhr.status === 200) {
+            successList.push({ name: file.name });
+          } else {
+            failList.push({ name: file.name, error: 'Server error ' + xhr.status });
+          }
         }
+        next();
+      };
+
+      xhr.ontimeout = () => {
+        failList.push({ name: file.name, error: 'Upload timed out. Wi-Fi connection is too slow.' });
+        next();
       };
 
       xhr.onerror = () => {
-        showToast(`Network error uploading ${file.name}`);
+        const destFs = (getCurrentDrive()?.fs_type || '').toUpperCase();
+        let err;
+        if (isCurrentPathUsb() && destFs.includes('NTFS')) {
+          err = 'Drive is read-only NTFS. Android TV cannot write to NTFS drives.';
+        } else {
+          err = 'Upload interrupted or rejected by TV. Check Wi-Fi connection and ensure file size is under 4GB for FAT32 drives.';
+        }
+        failList.push({ name: file.name, error: err });
         next();
       };
 
@@ -1002,23 +1517,33 @@
     // 1. Link / Video Launcher
     async function launchLink(target) {
       if (!el.linkUrlInput) return;
-      let urlVal = el.linkUrlInput.value.trim();
-      if (!urlVal) {
-        showToast('Please paste a link or video URL');
+      let rawVal = el.linkUrlInput.value.trim();
+      if (!rawVal) {
+        showToast("Please paste a link or video URL");
         el.linkUrlInput.focus();
         return;
       }
-      if (!/^https?:\/\//i.test(urlVal)) {
-        urlVal = 'https://' + urlVal;
+
+      let urlVal = rawVal;
+      const isUrl = /^https?:\/\//i.test(rawVal) || (rawVal.includes(".") && !rawVal.includes(" "));
+      if (!isUrl) {
+        if (target === "browser") {
+          urlVal = "https://www.google.com/search?q=" + encodeURIComponent(rawVal);
+        } else {
+          urlVal = "https://www.youtube.com/results?search_query=" + encodeURIComponent(rawVal);
+        }
+      } else if (!/^https?:\/\//i.test(urlVal)) {
+        urlVal = "https://" + urlVal;
       }
 
+      const appName = target === "smarttube" ? "SmartTube" : (target === "browser" ? "Browser" : "YouTube");
       window.Haptics?.ok();
-      showToast(`Launching on TV…`);
+      showToast(`Opening on ${appName}...`);
       try {
-        await send('open_url', { url: urlVal, target: target });
-        showToast('Opened on TV!');
+        await send("open_url", { url: urlVal, target: target });
+        showToast(`Opened on ${appName}!`);
       } catch (e) {
-        showToast('Failed to open URL on TV');
+        showToast(`Failed to open on ${appName}`);
       }
     }
 
@@ -1071,6 +1596,329 @@
       window.Haptics?.tap();
       refreshTvStatus();
     });
+
+    // 4. Version 2.0 Subsystem Setups
+    setupGroqAi();
+    setupAudioEq();
+    setupNotificationRelay();
+    setupAutomations();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // =========================================
+  // Groq Cloud AI Copilot (Recommender & Summarizer)
+  // =========================================
+  function setupGroqAi() {
+    let savedKey = localStorage.getItem('tv_groq_api_key') || '';
+    if (el.groqApiKeyInput) el.groqApiKeyInput.value = savedKey;
+
+    const updateKeyPill = () => {
+      if (!el.aiKeyStatusPill) return;
+      if (savedKey && savedKey.startsWith('gsk_')) {
+        el.aiKeyStatusPill.textContent = 'Active';
+        el.aiKeyStatusPill.className = 'ai-status-pill active';
+      } else {
+        el.aiKeyStatusPill.textContent = 'No Key';
+        el.aiKeyStatusPill.className = 'ai-status-pill';
+      }
+    };
+    updateKeyPill();
+
+    el.btnSaveGroqKey?.addEventListener('click', () => {
+      window.Haptics?.tap();
+      const val = el.groqApiKeyInput ? el.groqApiKeyInput.value.trim() : '';
+      if (!val) {
+        localStorage.removeItem('tv_groq_api_key');
+        savedKey = '';
+        showToast('Groq API Key removed');
+      } else {
+        localStorage.setItem('tv_groq_api_key', val);
+        savedKey = val;
+        showToast('Groq API Key saved!');
+      }
+      updateKeyPill();
+    });
+
+    // Category chips
+    let selectedCategory = 'Movies';
+    if (el.aiCategoryChips) {
+      el.aiCategoryChips.querySelectorAll('.ai-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          window.Haptics?.tap();
+          el.aiCategoryChips.querySelectorAll('.ai-chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedCategory = btn.dataset.cat || 'Movies';
+        });
+      });
+    }
+
+    // Recommendations fetch
+    el.btnGetAiRecs?.addEventListener('click', async () => {
+      window.Haptics?.tap();
+      if (!savedKey) {
+        showToast('Please paste your Groq API Key above first');
+        el.groqApiKeyInput?.focus();
+        return;
+      }
+
+      const lang = el.aiLanguageSelect?.value || 'English';
+      const genre = el.aiGenreSelect?.value || 'Sci-Fi';
+      const mood = el.aiMoodInput?.value.trim() || 'thrilling and memorable';
+
+      el.btnGetAiRecs.disabled = true;
+      el.btnGetAiRecs.innerHTML = '<span class="status-dot reconnecting"></span> Thinking…';
+      if (el.aiRecsContainer) {
+        el.aiRecsContainer.style.display = 'flex';
+        el.aiRecsContainer.innerHTML = '<div style="font-size:12px; color:var(--text-3); text-align:center; padding:12px;">Querying Llama 3.3 on Groq Cloud…</div>';
+      }
+
+      try {
+        const sysPrompt = 'You are an expert TV movie & media curator. Return exactly 3 recommendations matching the user\'s category, language, genre, and mood. Format strictly as a valid JSON array of objects with keys: "title", "year", "rating" (IMDb e.g. "8.4"), "hook" (1 punchy spoiler-free sentence), "match_reason" (why it fits the mood). Output NO markdown ticks, NO commentary, ONLY the raw JSON array.';
+        const userPrompt = `Category: ${selectedCategory}\nLanguage: ${lang}\nGenre: ${genre}\nMood / Vibe: ${mood}`;
+
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${savedKey}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: sysPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 600
+          })
+        });
+
+        if (!resp.ok) {
+          throw new Error('Groq API Error: ' + resp.status);
+        }
+
+        const data = await resp.json();
+        const contentStr = data.choices[0]?.message?.content || '[]';
+        const cleanJson = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
+        const recs = JSON.parse(cleanJson);
+
+        if (!Array.isArray(recs) || recs.length === 0) {
+          throw new Error('No items returned');
+        }
+
+        if (el.aiRecsContainer) {
+          el.aiRecsContainer.innerHTML = '';
+          recs.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'ai-rec-card';
+            card.innerHTML = `
+              <div class="ai-rec-header">
+                <span class="ai-rec-title">${escapeHtml(item.title)} <span style="font-size:11px; font-weight:600; color:var(--text-3);">(${escapeHtml(item.year)})</span></span>
+                <span class="ai-rec-badge">★ ${escapeHtml(item.rating || '8.0')}</span>
+              </div>
+              <div class="ai-rec-hook">${escapeHtml(item.hook || '')}</div>
+              <div style="font-size:11px; color:var(--accent);">${escapeHtml(item.match_reason || '')}</div>
+              <button class="btn ai-rec-action" data-title="${escapeHtml(item.title)}">Watch on TV</button>
+            `;
+
+            card.querySelector('.ai-rec-action').addEventListener('click', (e) => {
+              e.stopPropagation();
+              window.Haptics?.tap();
+              const targetQuery = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' trailer')}`;
+              send('open_url', { url: targetQuery, target: 'smarttube' });
+              showToast(`Launched on TV: ${item.title}`);
+            });
+
+            el.aiRecsContainer.appendChild(card);
+          });
+        }
+
+      } catch (err) {
+        if (el.aiRecsContainer) {
+          el.aiRecsContainer.innerHTML = `<div style="font-size:12px; color:var(--danger); padding:8px;">AI Recommender error: ${escapeHtml(err.message)}</div>`;
+        }
+      } finally {
+        if (el.btnGetAiRecs) {
+          el.btnGetAiRecs.disabled = false;
+          el.btnGetAiRecs.innerHTML = '<svg class="icon icon-16"><use href="#i-sparkle"/></svg> <span>Ask AI</span>';
+        }
+      }
+    });
+  }
+
+  // =========================================
+  // Display & Audio EQ Calibrator
+  // =========================================
+  function setupAudioEq() {
+    const audioBtns = [
+      { el: el.btnAudioDialogue, mode: 'dialogue_boost', label: 'Dialogue Boost (+4.5dB)' },
+      { el: el.btnAudioNight, mode: 'night_mode', label: 'Night Compression' },
+      { el: el.btnAudioMusic, mode: 'music', label: 'Music Mode' },
+      { el: el.btnAudioFlat, mode: 'flat', label: 'Audio Reset' }
+    ];
+
+    audioBtns.forEach(item => {
+      item.el?.addEventListener('click', async () => {
+        window.Haptics?.tap();
+        audioBtns.forEach(b => b.el?.classList.remove('active'));
+        item.el?.classList.add('active');
+        try {
+          await send('audio_eq', { mode: item.mode });
+          showToast(`Audio: ${item.label}`);
+        } catch (e) {
+          showToast('Failed to apply Audio EQ');
+        }
+      });
+    });
+
+    const picBtns = [
+      { el: el.btnPicCinema, mode: 'cinema', label: 'Cinema Warm (D65)' },
+      { el: el.btnPicSports, mode: 'vivid', label: 'Vivid Sports' },
+      { el: el.btnPicGame, mode: 'game', label: 'Game Mode (Low Latency)' },
+      { el: el.btnPicStd, mode: 'standard', label: 'Standard Picture' }
+    ];
+
+    picBtns.forEach(item => {
+      item.el?.addEventListener('click', async () => {
+        window.Haptics?.tap();
+        picBtns.forEach(b => b.el?.classList.remove('active'));
+        item.el?.classList.add('active');
+        try {
+          await send('picture_mode', { mode: item.mode });
+          showToast(`Picture: ${item.label}`);
+        } catch (e) {
+          showToast('Failed to apply Picture Mode');
+        }
+      });
+    });
+  }
+
+  // =========================================
+  // Mobile-to-TV Notification Relay
+  // =========================================
+  function setupNotificationRelay() {
+    async function maybeSummarize(text) {
+      const apiKey = localStorage.getItem('tv_groq_api_key');
+      const summarizeEnabled = el.aiSummarizerSwitch?.checked;
+      if (!summarizeEnabled || !apiKey || text.length <= 45) {
+        return text;
+      }
+      try {
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [
+              {
+                role: 'system',
+                content: 'Compress this notification to a single punchy line under 50 characters for a TV screen banner. Return ONLY the line with no quotes or preface.'
+              },
+              { role: 'user', content: text }
+            ],
+            max_tokens: 30,
+            temperature: 0.3
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const clean = data.choices[0]?.message?.content?.trim();
+          if (clean) return clean;
+        }
+      } catch (ignored) {}
+      return text;
+    }
+
+    el.btnSendCustomAlert?.addEventListener('click', async () => {
+      window.Haptics?.tap();
+      let msg = el.customAlertInput?.value.trim();
+      if (!msg) {
+        showToast('Type a message first');
+        el.customAlertInput?.focus();
+        return;
+      }
+      msg = await maybeSummarize(msg);
+      try {
+        await send('send_toast', { message: msg, type: 'custom' });
+        showToast('Banner displayed on TV');
+        if (el.customAlertInput) el.customAlertInput.value = '';
+      } catch (e) {
+        showToast('Failed to send alert');
+      }
+    });
+
+    el.btnAlertCall?.addEventListener('click', async () => {
+      window.Haptics?.tap();
+      await send('send_toast', { title: 'Incoming Call', message: 'Mom (Mobile)', type: 'call' });
+      showToast('Call Alert sent to TV');
+    });
+
+    el.btnAlertBattery?.addEventListener('click', async () => {
+      window.Haptics?.tap();
+      await send('send_toast', { title: 'Battery Warning', message: 'Phone Battery 12% - Connect Charger', type: 'battery' });
+      showToast('Battery Alert sent to TV');
+    });
+
+    el.btnAlertMsg?.addEventListener('click', async () => {
+      window.Haptics?.tap();
+      await send('send_toast', { title: 'WhatsApp', message: 'Karthik: Hey! Are you free for a quick call?', type: 'sms' });
+      showToast('Message Alert sent to TV');
+    });
+
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then(battery => {
+        let lastNotifiedBattery = 0;
+        const checkBattery = () => {
+          if (!el.autoBatteryAlertSwitch?.checked) return;
+          const levelPct = Math.round(battery.level * 100);
+          const now = Date.now();
+          if (levelPct <= 15 && !battery.charging && (now - lastNotifiedBattery > 900000)) {
+            lastNotifiedBattery = now;
+            send('send_toast', {
+              title: 'Low Battery Alert',
+              message: `Phone battery at ${levelPct}% - Please plug in charger`,
+              type: 'battery'
+            });
+          }
+        };
+        battery.addEventListener('levelchange', checkBattery);
+        battery.addEventListener('chargingchange', checkBattery);
+      }).catch(() => {});
+    }
+  }
+
+
+  // =========================================
+  // TV Automations & Sleep Timer
+  // =========================================
+  function setupAutomations() {
+    if (!el.sleepTimerBtnsGroup) return;
+    el.sleepTimerBtnsGroup.querySelectorAll('.btn-timer').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        window.Haptics?.tap();
+        el.sleepTimerBtnsGroup.querySelectorAll('.btn-timer').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mins = parseInt(btn.dataset.mins || '0', 10);
+        try {
+          await send('sleep_timer', { minutes: mins });
+          showToast(mins > 0 ? `Sleep timer set: ${mins} minutes` : 'Sleep timer turned off');
+        } catch (e) {
+          showToast('Failed to set sleep timer');
+        }
+      });
+    });
   }
 
   async function refreshTvStatus() {
@@ -1115,14 +1963,32 @@
         el.dashCpu.textContent = data.cpu || 'MediaTek Quad-Core Cortex-A55';
       }
       if (el.dashUsb) {
-        const usbStr = data.usb_drives && data.usb_drives !== 'none' ? data.usb_drives.trim() : 'None detected';
-        el.dashUsb.textContent = usbStr;
+        let usbSummary = 'None detected';
+        if (data.usb_drives && data.usb_drives !== 'none') {
+          try {
+            const drives = typeof data.usb_drives === 'string' ? JSON.parse(data.usb_drives) : data.usb_drives;
+            if (Array.isArray(drives) && drives.length > 0) {
+              const d = drives[0];
+              const fs = d.fs_type ? ` · ${d.fs_type}` : '';
+              usbSummary = `${d.free_str || d.name} free${fs}`;
+            } else if (typeof data.usb_drives === 'string' && !data.usb_drives.startsWith('[')) {
+              usbSummary = data.usb_drives.trim();
+            }
+          } catch (e) {
+            usbSummary = '1 Connected';
+          }
+        }
+        el.dashUsb.textContent = usbSummary;
       }
       if (el.dashUptime) {
-        el.dashUptime.textContent = data.uptime || '--';
+        el.dashUptime.textContent = data.uptime ? data.uptime.split(',')[0].replace('up', '').trim() : '--';
       }
       if (el.dashFocus) {
-        el.dashFocus.textContent = data.focus || 'Android TV Home';
+        let cleanFocus = data.focus ? data.focus.split('/').pop().replace('}', '').trim() : 'Launcher';
+        if (cleanFocus.includes('tvpowerhub')) cleanFocus = 'TV Power Hub';
+        else if (cleanFocus.includes('smarttube')) cleanFocus = 'SmartTube';
+        else if (cleanFocus.includes('browser')) cleanFocus = 'Browser';
+        el.dashFocus.textContent = cleanFocus;
       }
 
     } catch (e) {}
@@ -1304,6 +2170,7 @@
     setupSettings();
     setupKeyboardShortcuts();
 
+    initWebSocket();
     setNavMode(state.navMode);
     pingTv();
     setInterval(pingTv, 4000);

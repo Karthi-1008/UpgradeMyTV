@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full-screen background: dark base + warm glow behind the QR card (right) + faint green glow bottom-left -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#FF0F1012" android:endColor="#FF0B0C0E"/>
+        </shape>
+    </item>
+    <item android:gravity="center_vertical|end" android:width="720dp" android:height="720dp" android:end="-80dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="360dp" android:centerColor="#14FF6B3D" android:startColor="#33FF6B3D" android:endColor="#00FF6B3D"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|start" android:width="640dp" android:height="640dp" android:start="-200dp" android:bottom="-260dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="320dp" android:startColor="#124CD39A" android:endColor="#004CD39A"/>
+        </shape>
+    </item>
+</layer-list>

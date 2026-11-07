@@ -1,0 +1,39 @@
+{
+  "id": "sony_bravia",
+  "name": "Sony Bravia Android TV",
+  "match": {
+    "manufacturer": "(?i)Sony",
+    "model": "(?i).*BRAVIA.*"
+  },
+  "sourceMenu": [
+    {
+      "type": "activity",
+      "action": "android.intent.action.MAIN",
+      "component": "com.sony.dtv.osat.inputs/.MainActivity",
+      "description": "Sony Bravia Native Inputs Menu"
+    },
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Fallback KEYCODE_TV_INPUT"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "Standard KEYCODE_SLEEP"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "Standard KEYCODE_WAKEUP"
+    }
+  ],
+  "quirks": {
+    "videoLayerBlackInScreenshot": false,
+    "braviaSync": true
+  }
+}

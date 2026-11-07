@@ -1,0 +1,35 @@
+{
+  "id": "amazon_firetv",
+  "name": "Amazon Fire TV Edition / Stick",
+  "match": {
+    "manufacturer": "(?i)Amazon",
+    "model": "(?i).*AFT.*"
+  },
+  "sourceMenu": [
+    {
+      "type": "key",
+      "code": 178,
+      "description": "Fire TV Input Key"
+    }
+  ],
+  "sleep": [
+    {
+      "type": "key",
+      "code": 223,
+      "description": "Standard KEYCODE_SLEEP"
+    }
+  ],
+  "wake": [
+    {
+      "type": "key",
+      "code": 224,
+      "description": "Standard KEYCODE_WAKEUP"
+    }
+  ],
+  "quirks": {
+    "noGooglePlayServices": true,
+    "homePackages": [
+      "com.amazon.tv.launcher"
+    ]
+  }
+}

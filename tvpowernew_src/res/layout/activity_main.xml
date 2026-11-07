@@ -2,214 +2,132 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ff101113"
-    android:gravity="center_vertical"
+    android:background="#FF101113"
     android:orientation="horizontal"
-    android:paddingBottom="36dp"
-    android:paddingEnd="48dp"
-    android:paddingStart="48dp"
-    android:paddingTop="36dp">
+    android:gravity="center_vertical"
+    android:padding="48dp">
 
-    <!-- Left Column: TV Info & Server Controls -->
+    <!-- Left Column: Logo, Name, Status, URL, and Restart Button (Weight 1.15) -->
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1.15"
-        android:gravity="center_vertical"
         android:orientation="vertical"
-        android:paddingEnd="36dp">
+        android:paddingEnd="40dp">
 
-        <!-- Title & Version Row -->
+        <!-- App Brand Row: Logo + App Name -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.04"
-                android:text="TV POWER"
-                android:textColor="#fff2f1ee"
-                android:textSize="32sp"
-                android:textStyle="bold" />
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/logo"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no" />
 
             <TextView
+                android:id="@+id/tvName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:background="#ff1e2024"
-                android:letterSpacing="0.08"
-                android:paddingBottom="4dp"
-                android:paddingEnd="10dp"
-                android:paddingStart="10dp"
-                android:paddingTop="4dp"
-                android:text="NEW"
-                android:textColor="#ffff6b3d"
-                android:textSize="12sp"
+                android:layout_marginStart="20dp"
+                android:text="@string/app_name"
+                android:textColor="#FFF2F1EE"
+                android:textSize="36sp"
+                android:fontFamily="sans-serif-black"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Subtitle -->
-        <TextView
+        <!-- Status Indicator Row: Dot + Status Text -->
+        <LinearLayout
+            android:id="@+id/statusRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Tactile Web Remote, RAM Optimization &amp; Typing"
-            android:textColor="#ffa5a7ad"
-            android:textSize="14sp" />
+            android:layout_marginTop="28dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <!-- Direct Connection Info Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/card_dark_bg"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.08"
-                android:text="WEB REMOTE DIRECT URL"
-                android:textColor="#ff6f7279"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvUrl"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginTop="4dp"
-                android:text="http://192.168.X.X:8088"
-                android:textColor="#fff2f1ee"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+            <View
+                android:id="@+id/statusDot"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:background="@drawable/dot" />
 
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="&#9679; Server Active (Port 8088 &amp; 8080)"
-                android:textColor="#ff4cd39a"
-                android:textSize="13sp"
+                android:layout_marginStart="12dp"
+                android:textColor="#FFA5A7AD"
+                android:textSize="24sp"
+                android:fontFamily="sans-serif-medium"
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvStats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="TCL Smart TV C06 &#183; System RAM Guardian Active"
-                android:textColor="#ff6f7279"
-                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Highlights (Zero Emoji) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="&#8226; Tactile Remote: 4-Way D-Pad, Volume Rocker &amp; Hold-to-Repeat"
-                android:textColor="#ffa5a7ad"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="&#8226; Live Phone Keyboard: Direct typing and instant TV text paste"
-                android:textColor="#ffa5a7ad"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="&#8226; Autonomous Guardian: Background RAM cache cleaner &amp; Screen capture"
-                android:textColor="#ffa5a7ad"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <!-- Controls Row (ONLY Restart Server Button - Test Video Removed) -->
-        <LinearLayout
+        <!-- Monospace Large URL -->
+        <TextView
+            android:id="@+id/tvUrl"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginTop="8dp"
+            android:textColor="#FFF2F1EE"
+            android:textSize="30sp"
+            android:fontFamily="monospace"
+            android:typeface="monospace"
+            android:textIsSelectable="false" />
 
-            <Button
-                android:id="@+id/btnToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/btn_tv_selector"
-                android:focusable="true"
-                android:text="RESTART SERVER"
-                android:textColor="#ffffffff"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <!-- Restart Server Button (Single focusable control on screen) -->
+        <Button
+            android:id="@+id/btnRestart"
+            android:layout_width="wrap_content"
+            android:layout_height="64dp"
+            android:minWidth="280dp"
+            android:layout_marginTop="32dp"
+            android:text="@string/restart_server"
+            android:textSize="24sp"
+            android:fontFamily="sans-serif-medium"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:background="@drawable/btn_tv_selector"
+            android:textColor="@color/btn_tv_text"
+            android:drawableStart="@drawable/ic_refresh"
+            android:drawablePadding="12dp"
+            android:paddingStart="28dp"
+            android:paddingEnd="32dp"
+            android:focusable="true" />
     </LinearLayout>
 
-    <!-- Right Column: Elevated QR Code Card -->
-    <LinearLayout
+    <!-- Right Column: Clean White QR Code Card (Weight 1.0) -->
+    <FrameLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="0.85"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/qr_card_bg"
-            android:elevation="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:letterSpacing="0.08"
-                android:text="SCAN TO CONNECT"
-                android:textColor="#ff101113"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+        <FrameLayout
+            android:layout_width="360dp"
+            android:layout_height="360dp"
+            android:layout_gravity="center"
+            android:background="@drawable/qr_card_bg">
 
             <ImageView
-                android:id="@+id/ivQrCode"
-                android:layout_width="260dp"
-                android:layout_height="260dp"
-                android:background="#ffffffff"
-                android:contentDescription="Scan with phone camera to open TV Remote" />
+                android:id="@+id/ivQr"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:contentDescription="QR code for the remote address" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Point phone camera at code to open Remote"
-                android:textColor="#ff5a5d64"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="Ensure phone and TV are on the same Wi-Fi network"
-            android:textColor="#ff6f7279"
-            android:textSize="12sp" />
-    </LinearLayout>
-
+            <ImageView
+                android:id="@+id/ivNoNet"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_wifi_off"
+                android:visibility="gone"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+    </FrameLayout>
 </LinearLayout>
