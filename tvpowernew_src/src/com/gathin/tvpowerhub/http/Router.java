@@ -119,6 +119,22 @@ public class Router {
             case "media":
                 MediaApi.handleMedia(context, req, resp);
                 break;
+            case "now_playing":
+            case "media/now_playing":
+                MediaApi.handleNowPlaying(context, req, resp);
+                break;
+            case "seek":
+            case "media/seek":
+                MediaApi.handleSeek(context, req, resp);
+                break;
+            case "get_volume":
+            case "volume":
+                MediaApi.handleGetVolume(context, req, resp);
+                break;
+            case "set_volume":
+            case "volume/set":
+                MediaApi.handleSetVolume(context, req, resp);
+                break;
             case "list_files":
             case "files":
                 FilesApi.handleListFiles(context, req, resp);
@@ -127,6 +143,10 @@ public class Router {
             case "files/download":
                 FilesApi.handleDownloadFile(context, req, resp, out);
                 break;
+            case "download_zip":
+            case "files/download_zip":
+                FilesApi.handleDownloadZip(context, req, resp, out);
+                break;
             case "upload_file":
             case "files/upload":
                 FilesApi.handleUploadFile(context, socket, req, in, resp, out);
@@ -134,6 +154,14 @@ public class Router {
             case "delete_file":
             case "files/delete":
                 FilesApi.handleDeleteFile(context, req, resp);
+                break;
+            case "restore_file":
+            case "files/restore":
+                FilesApi.handleRestoreFile(context, req, resp);
+                break;
+            case "play_on_tv":
+            case "files/play":
+                FilesApi.handlePlayOnTv(context, req, resp);
                 break;
             case "copy_file":
             case "files/copy":

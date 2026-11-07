@@ -63,5 +63,6 @@ public final class R {
   }
   public static final class xml {
     public static final int accessibility_service_config=0x7f070000;
+    public static final int method=0x7f070001;
   }
 }

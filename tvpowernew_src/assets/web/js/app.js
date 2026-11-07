@@ -2174,8 +2174,45 @@
     setNavMode(state.navMode);
     pingTv();
     setInterval(pingTv, 4000);
+    refreshDiagnostics();
+    setInterval(refreshDiagnostics, 5000);
 
     // Initial wake lock on remote tab
     acquireWakeLock();
   });
 })();
+
+
+  async function refreshDiagnostics() {
+    try {
+      const t0 = performance.now();
+      const res = await fetch(`/api/v1/capabilities?key=${encodeURIComponent(API_KEY)}`);
+      const rtt = Math.round(performance.now() - t0);
+      if (res.ok) {
+        const caps = await res.json();
+        const rttEl = document.getElementById('diagRttText');
+        const engineEl = document.getElementById('diagEngineTier');
+        const profileEl = document.getElementById('diagMatchedProfile');
+        const pillEl = document.getElementById('diagChannelPill');
+
+        if (rttEl) rttEl.textContent = `${rtt} ms`;
+        if (engineEl) {
+          if (caps.ime_connected) engineEl.textContent = "TV Keyboard IME (Unicode)";
+          else if (caps.accessibility_granted) engineEl.textContent = "Accessibility Service (A11y)";
+          else engineEl.textContent = "Shell Daemon / KeyDaemon";
+        }
+        if (profileEl && caps.profile) {
+          profileEl.textContent = caps.profile.name || caps.profile.id;
+        }
+        if (pillEl) {
+          if (wsReady) {
+            pillEl.textContent = "WebSocket (< 40ms)";
+            pillEl.style.color = "var(--ok)";
+          } else {
+            pillEl.textContent = "HTTP Keep-Alive";
+            pillEl.style.color = "var(--accent)";
+          }
+        }
+      }
+    } catch (ignored) {}
+  }

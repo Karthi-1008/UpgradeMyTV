@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.gathin.tvpowerhub.PowerHubService;
 import com.gathin.tvpowerhub.TvAccessibilityService;
+import com.gathin.tvpowerhub.TvKeyboardService;
 import com.gathin.tvpowerhub.http.HttpRequest;
 
 import org.json.JSONObject;
@@ -220,9 +221,27 @@ public class WebSocketHandler {
 
             if ("text".equals(type)) {
                 String val = json.optString("v", "");
-                boolean handled = TvAccessibilityService.sendText(val);
+                String mode = json.optString("mode", "append");
+                boolean handled = false;
+                String engine = "none";
+                if (TvKeyboardService.isImeConnected()) {
+                    if ("replace".equalsIgnoreCase(mode)) {
+                        handled = TvKeyboardService.replaceText(val);
+                    } else {
+                        handled = TvKeyboardService.commitUnicodeText(val);
+                    }
+                    if (handled) engine = "ime";
+                }
+                if (!handled) {
+                    handled = TvAccessibilityService.sendText(val);
+                    if (handled) engine = "a11y";
+                }
                 if (id >= 0) {
-                    sendTextMessage(new JSONObject().put("ack", id).put("handled", handled).toString());
+                    sendTextMessage(new JSONObject()
+                            .put("ack", id)
+                            .put("handled", handled)
+                            .put("engine", engine)
+                            .toString());
                 }
                 return;
             }

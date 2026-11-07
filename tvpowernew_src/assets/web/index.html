@@ -837,6 +837,35 @@
             </div>
           </div>
 
+                    <!-- Diagnostics & Health Card (M1) -->
+          <div class="section-card" id="cardDiagnostics">
+            <div class="card-header">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <svg class="icon" style="color: var(--accent);"><use href="#i-refresh"/></svg>
+                  <h2 class="card-title">Live Remote Diagnostics (M1)</h2>
+                </div>
+                <span class="ai-status-pill" id="diagChannelPill" style="background: rgba(76, 211, 154, 0.15); color: var(--ok); border-color: rgba(76, 211, 154, 0.3);">WebSocket Active</span>
+              </div>
+              <p class="card-subtitle">Real-time latency, active key injection tier, and TV hardware profile.</p>
+            </div>
+
+            <div class="dashboard-grid">
+              <div class="dash-card">
+                <span class="dash-label">Channel Latency (RTT)</span>
+                <span class="dash-value dash-mono" id="diagRttText" style="color: var(--ok);">-- ms</span>
+              </div>
+              <div class="dash-card">
+                <span class="dash-label">Input Engine Tier</span>
+                <span class="dash-value" id="diagEngineTier" style="font-size: 13px;">IME / A11y</span>
+              </div>
+              <div class="dash-card span-2">
+                <span class="dash-label">Matched TV Device Profile</span>
+                <span class="dash-value" id="diagMatchedProfile" style="font-size: 13px; color: var(--accent);">Detecting profile...</span>
+              </div>
+            </div>
+          </div>
+
           <!-- 3. Full Device Status Dashboard -->
           <div class="section-card">
             <div class="card-header">

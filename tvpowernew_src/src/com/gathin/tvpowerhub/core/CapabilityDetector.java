@@ -65,6 +65,9 @@ public class CapabilityDetector {
             boolean a11yGranted = TvAccessibilityService.isConnected();
             caps.put("accessibility_granted", a11yGranted);
 
+            caps.put("ime_available", com.gathin.tvpowerhub.TvKeyboardService.isImeAvailable());
+            caps.put("ime_connected", com.gathin.tvpowerhub.TvKeyboardService.isImeConnected());
+
             boolean allFilesAccess = true;
             if (Build.VERSION.SDK_INT >= 30) {
                 allFilesAccess = Environment.isExternalStorageManager();
