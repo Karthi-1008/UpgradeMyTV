@@ -70,7 +70,7 @@ public class HttpResponse {
     }
 
     public void sendBytes(int code, String contentType, byte[] data, boolean cacheable) throws IOException {
-        String cacheHeader = cacheable ? "Cache-Control: public, max-age=86400\r\n" : "Cache-Control: no-cache\r\n";
+        String cacheHeader = cacheable ? "Cache-Control: public, max-age=86400\r\n" : "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n";
         String header = "HTTP/1.1 " + code + " " + getStatusText(code) + "\r\n" +
                 "Content-Type: " + contentType + "\r\n" +
                 "Content-Length: " + data.length + "\r\n" +

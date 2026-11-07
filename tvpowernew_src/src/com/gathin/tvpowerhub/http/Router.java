@@ -13,6 +13,7 @@ import com.gathin.tvpowerhub.api.TextApi;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -182,12 +183,13 @@ public class Router {
 
     private static void handleStatic(Context context, HttpRequest req, HttpResponse resp, OutputStream out) throws Exception {
         String path = req.getPath();
-        if (path.equals("/") || path.isEmpty()) {
-            path = "/index.html";
+        String cleanPath = path;
+        if (cleanPath.equals("/") || cleanPath.isEmpty()) {
+            cleanPath = "/index.html";
         }
 
         // Screen capture image
-        if (path.equals("/screen.png")) {
+        if (cleanPath.equals("/screen.png")) {
             String suppliedKey = req.getParam("key");
             if (suppliedKey == null) suppliedKey = req.getHeader("x-tvhub-key");
             if (!PowerHubService.isValidToken(context, suppliedKey)) {
@@ -205,20 +207,31 @@ public class Router {
             return;
         }
 
-        // Sanitize asset path
-        String assetPath = "web" + path;
-        try (InputStream assetIn = context.getAssets().open(assetPath)) {
-            String mime = HttpResponse.getMimeType(path);
-            boolean cacheable = !path.endsWith(".html") && !path.endsWith(".json");
-            byte[] bytes = new byte[assetIn.available()];
-            int read = assetIn.read(bytes);
-            if (read > 0) {
-                resp.sendBytes(200, mime, bytes, cacheable);
-            } else {
-                resp.sendError(404, "NOT_FOUND", "Asset is empty", null);
+        // Read asset from APK bundled assets with complete stream loop
+        String assetPath = "web" + (cleanPath.startsWith("/") ? cleanPath : "/" + cleanPath);
+        try {
+            InputStream is = context.getAssets().open(assetPath);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[32768];
+            int n;
+            while ((n = is.read(buf)) != -1) {
+                baos.write(buf, 0, n);
             }
-        } catch (Exception e) {
-            resp.sendError(404, "NOT_FOUND", "Resource not found: " + path, null);
+            is.close();
+            byte[] bytes = baos.toByteArray();
+            String mime = HttpResponse.getMimeType(cleanPath);
+            boolean cacheable = !cleanPath.endsWith(".html") && !cleanPath.endsWith(".js") && !cleanPath.endsWith(".json");
+            resp.sendBytes(200, mime, bytes, cacheable);
+            return;
+        } catch (Exception ignored) {}
+
+        // Fallback: check /data/local/tmp/www
+        File tmpFile = new File("/data/local/tmp/www", cleanPath.startsWith("/") ? cleanPath.substring(1) : cleanPath);
+        if (tmpFile.exists() && tmpFile.isFile()) {
+            resp.sendFileWithRange(tmpFile, req.getHeader("range"));
+            return;
         }
+
+        resp.sendError(404, "NOT_FOUND", "Resource not found: " + path, null);
     }
 }
